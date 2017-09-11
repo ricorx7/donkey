@@ -89,9 +89,6 @@ class PWMThrottle:
                                     self.MIN_THROTTLE, 0, 
                                     self.min_pulse, self.zero_pulse)
 
-        #print("PwmThrottle Throttle: ", throttle)
-        #print("PwmThrottle Pulse:    ", pulse)
-
         self.controller.set_pulse(pulse)
         
     def shutdown(self):
@@ -312,3 +309,13 @@ class Teensy:
             ret = ret.rstrip()
 
         return ret
+
+class MockController(object):
+    def __init__(self):
+        pass
+
+    def run(self, pulse):
+        pass
+
+    def shutdown(self):
+        pass
