@@ -24,59 +24,29 @@ RX bytes:1260 acl:0 sco:0 events:46 errors:0
 TX bytes:452 acl:0 sco:0 commands:45 errors:0
 ```
 
-Download an application to pair the PS3 remote to the RPI3
-
-
+Pair the PS3 controller to the RPI3
 ```bash
-wget http://www.pabr.org/sixlinux/sixpair.c
-gcc -o sixpair sixpair.c -lusb
+bluetoothctrl
 ```
 
-Connect the PS3 remote to the RPI3 with the USB cable.
-
-Now run the pair to see pair it with the RPI3
-Run the command:
+This will start the application and give you a menu.
+List the Bluetooth devices available.
 ```bash
-sudo ./sixpair
+devices
 ```
 
-This should show something like:
+Write down the device MAC address
+Now turn on agent and
+let it trust the mac address
 ```bash
-Current Bluetooth master: DE:AD:BE:EF:00:00
-Setting master bd_addr to: 00:1F:81:00:06:20 
+agent on
+trust "mac address"
+quit
 ```
 
-If you do not see this, then reboot, and try again to run the applicaiton.
-
-
-Now we need to install the application to use the PS3 controller through Bluetooth on /dev/input/js0
- 
-
-```
-git clone https://github.com/supertypo/qtsixa.git
-cd QtSixA-1.5.1/sixad
-make
-sudo mkdir -p /var/lib/sixad/profiles
-sudo checkinstall
-```
-
-It will ask you for a summary.  I just put "PS3 Controller".
-
-
-```bash
-sudo sixad --start
-```
-When it displays its searching, press the PS Button and your golden~!)
-
-RUN THIS APPLICATION AT START TO GET THE BLUETOOTH REMOTE TO WORK.
-
-
-To install this application as a process that will run at startup:
-```bash
-sudo update-rc.d sixad defaults
-reboot
-```
-This did not work for me yet.
+You only have to do this once.  It will remeber the PS3 remote from now on.
+Disconnect the USB cable from the PS3 remote.
+Press the connect button on the PS3.  You should see it blink all 4 LEDs, then 1 LED which means it is connected. 
 
 To test that the Bluetooth PS3 remote is working, verify that /dev/input/js0 exist.
 
