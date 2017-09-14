@@ -113,28 +113,47 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
 
 
 
-def train(tub_name, model_name):
-    
+def train(tub_names, model_name):
+
+    # Set the Neural Network type (Categorical or Linear)
     kl = dk.parts.KerasCategorical()
-    
-    tub_path = os.path.join(DATA_PATH, tub_name)
-    tub = dk.parts.Tub(tub_path)
-    
-    X_keys = ['cam/image_array']
-    y_keys = ['user/angle', 'user/throttle']
-    
+
+    # Set the model name with model path
+    model_path = os.path.join(MODELS_PATH, model_name)
+
+    # Set the complete path for each tub listed
+    if tub_names:
+        tub_paths = [os.path.join(DATA_PATH, n.strip()) for n in tub_names.split(',')]
+    else:
+        tub_paths = [os.path.join(DATA_PATH, n.strip()) for n in os.listdir(DATA_PATH)]
+    tubs = [dk.parts.Tub(p) for p in tub_paths]
+
     def rt(record):
         record['user/angle'] = dk.utils.linear_bin(record['user/angle'])
         #record['user/throttle'] = dk.utils.linear_bin(record['user/throttle'])      # !!! Possible where to fix throttle
         return record
-    
-    train_gen, val_gen = tub.train_val_gen(X_keys, y_keys, 
-                                           record_transform=rt, batch_size=128)
-    
-    model_path = os.path.join(MODELS_PATH, model_name)
-    kl.train(train_gen, None, saved_model_path=model_path)
 
+    # Combine the generators from multiple tubs
+    def combined_gen(gens):
+        import itertools
+        combined_gen = itertools.chain()
+        for gen in gens:
+            combined_gen = itertools.chain(combined_gen, gen)
+        return combined_gen
 
+    X_keys = ['cam/image_array']
+    y_keys = ['user/angle', 'user/throttle']
+
+    # Accumulate a generator for each tub
+    # X_keys = Training values (Images)
+    # y_keys = Labels for Training values (Steering Angle and Throttle)
+    # record_transform = Record the results to the record dict
+    gens = [tub.train_val_gen(X_keys, y_keys, record_transform=rt, batch_size=128) for tub in tubs]
+    train_gens = [gen[0] for gen in gens]
+    val_gens = [gen[1] for gen in gens]
+
+    # Train with the data loaded from the tubs
+    kl.train(combined_gen(train_gens), combined_gen(val_gens), saved_model_path=model_path)          # Why not use also val_gen
 
 
 def calibrate():

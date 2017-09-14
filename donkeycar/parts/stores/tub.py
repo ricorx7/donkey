@@ -42,7 +42,7 @@ class Tub():
 
         if exists:
             #load log and meta
-            print("Tub does exist")
+            print("Tub: " + self.path)
             with open(self.meta_path, 'r') as f:
                 self.meta = json.load(f)
             self.current_ix = self.get_last_ix() + 1

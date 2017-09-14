@@ -50,15 +50,36 @@ class KerasPilot():
         #                                           mode='auto')
         #
         #callbacks_list = [save_best, early_stop]
-        callbacks_list = [save_best]
+
+        # This will create a Graph directory
+        # Run tensorboard --logdir path_to/Graph
+        #embeddings_metadata = {
+        #     # Dense layers only:
+        #     l.name: "../10000_test_classes_labels_on_1_row_in_plain_text.tsv"
+        #     for l in self.model.layers if 'dense' in l.name.lower()
+        #}
+        tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph',
+                                                 histogram_freq=1,      # Histogram frequency
+                                                 #write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
+                                                 write_graph=True,      # Write graph to describe network
+                                                 write_images=True,     # Write model weights to visualize as image in TensorBoard.
+                                                 #embeddings_freq=3,     # Frequency selected embedding layers will be saved
+                                                 #embeddings_layer_names=list(embeddings_metadata.keys()),
+                                                 #embeddings_metadata=embeddings_metadata
+                                                 embeddings_freq=1,
+                                                 embeddings_layer_names=['dense_1', 'dense_2'],
+                                                 batch_size=5
+                                                 )
+
+        callbacks_list = [save_best, tbCallBack]
 
         hist = self.model.fit_generator(
                         train_gen, 
                         steps_per_epoch=steps, 
-                        nb_epoch=epochs, 
+                        nb_epoch=epochs,
                         verbose=1, 
                         validation_data=val_gen,
-                        callbacks=callbacks_list, 
+                        callbacks=callbacks_list,
                         nb_val_samples=steps*.2)
         return hist
 
