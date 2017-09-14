@@ -28,7 +28,7 @@ class KerasPilot():
         self.model.summary()
     
     def train(self, train_gen, val_gen, 
-              saved_model_path, epochs=500, steps=10, ):
+              saved_model_path, epochs=500, steps=10, tensorboard=False):
         
         """
         train_gen: generator that yields an array of images an array of 
@@ -53,11 +53,6 @@ class KerasPilot():
 
         # This will create a Graph directory
         # Run tensorboard --logdir path_to/Graph
-        #embeddings_metadata = {
-        #     # Dense layers only:
-        #     l.name: "../10000_test_classes_labels_on_1_row_in_plain_text.tsv"
-        #     for l in self.model.layers if 'dense' in l.name.lower()
-        #}
         tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph',
                                                  histogram_freq=1,      # Histogram frequency
                                                  #write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
@@ -71,7 +66,11 @@ class KerasPilot():
                                                  batch_size=5
                                                  )
 
-        callbacks_list = [save_best, tbCallBack]
+        callbacks_list = [save_best]
+
+        # Add Tensorboard callback
+        if tensorboard:
+            callbacks_list = [save_best, tbCallBack]
 
         hist = self.model.fit_generator(
                         train_gen, 

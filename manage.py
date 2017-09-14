@@ -4,7 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>]
-    manage.py train (--tub=<tub>) (--model=<model>)
+    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard=<True or False>]
     manage.py calibrate
 """
 
@@ -113,7 +113,7 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
 
 
 
-def train(tub_names, model_name):
+def train(tub_names, model_name, tensorboard=False):
 
     # Set the Neural Network type (Categorical or Linear)
     kl = dk.parts.KerasCategorical()
@@ -153,7 +153,7 @@ def train(tub_names, model_name):
     val_gens = [gen[1] for gen in gens]
 
     # Train with the data loaded from the tubs
-    kl.train(combined_gen(train_gens), combined_gen(val_gens), saved_model_path=model_path)          # Why not use also val_gen
+    kl.train(combined_gen(train_gens), combined_gen(val_gens), saved_model_path=model_path, tensorboard=tensorboard)
 
 
 def calibrate():
@@ -178,7 +178,8 @@ if __name__ == '__main__':
     elif args['train']:
         tub = args['--tub']
         model = args['--model']
-        train(tub, model)
+        tensorboard = args['--tensorboard']
+        train(tub, model, tensorboard=tensorboard)
 
 
 
