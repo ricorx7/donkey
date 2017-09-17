@@ -27,8 +27,13 @@ class KerasPilot():
         self.model = keras.models.load_model(model_path)
         self.model.summary()
     
-    def train(self, train_gen, val_gen, 
-              saved_model_path, epochs=500, steps=10, tensorboard=False):
+    def train(self,
+              train_gen,
+              val_gen,
+              saved_model_path,
+              num_epochs=500,                   # Nvidia uses 20000
+              steps=10,
+              tensorboard=False):
         
         """
         train_gen: generator that yields an array of images an array of 
@@ -75,7 +80,7 @@ class KerasPilot():
         hist = self.model.fit_generator(
                         train_gen, 
                         steps_per_epoch=steps, 
-                        nb_epoch=epochs,
+                        nb_epoch=num_epochs,
                         verbose=1, 
                         validation_data=val_gen,
                         callbacks=callbacks_list,
@@ -98,8 +103,7 @@ class KerasCategorical(KerasPilot):
         angle_unbinned = utils.linear_unbin(angle_binned)
         return angle_unbinned, throttle[0][0]
     
-    
-    
+
 class KerasLinear(KerasPilot):
     def __init__(self, *args, **kwargs):
         super(KerasLinear, self).__init__(*args, **kwargs)
@@ -111,6 +115,20 @@ class KerasLinear(KerasPilot):
         return angle[0][0], throttle[0][0]
 
 
+class KerasNvidaEndToEnd(KerasPilot):
+    def __init__(self, model=None, *args, **kwargs):
+        super(KerasNvidaEndToEnd, self).__init__(*args, **kwargs)
+        if model:
+            self.model = model
+        else:
+            self.model = nvidia_end_to_end()
+
+    def run(self, img_arr):
+        img_arr = img_arr.reshape((1,) + img_arr.shape)
+        angle_binned, throttle = self.model.predict(img_arr)
+        # angle_certainty = max(angle_binned[0])
+        angle_unbinned = utils.linear_unbin(angle_binned)
+        return angle_unbinned, throttle[0][0]
 
 
 
@@ -225,3 +243,82 @@ def default_relu():
 
     return model
 
+
+# Found here:
+# https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
+# https://www.youtube.com/watch?v=EaY5QiZwSP4
+# https://github.com/llSourcell/How_to_simulate_a_self_driving_car/blob/master/model.py
+def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-4):
+    """
+    NVIDIA model used
+    Image normalization to avoid saturation and make gradients work better.
+    Convolution: 5x5, filter: 24, strides: 2x2, activation: ELU
+    Convolution: 5x5, filter: 36, strides: 2x2, activation: ELU
+    Convolution: 5x5, filter: 48, strides: 2x2, activation: ELU
+    Convolution: 3x3, filter: 64, strides: 1x1, activation: ELU
+    Convolution: 3x3, filter: 64, strides: 1x1, activation: ELU
+    Drop out (0.5)
+    Fully connected: neurons: 100, activation: ELU
+    Fully connected: neurons: 50, activation: ELU
+    Fully connected: neurons: 10, activation: ELU
+    Fully connected: neurons: 1 (output)
+    # the convolution layers are meant to handle feature engineering
+    the fully connected layer for predicting the steering angle.
+    dropout avoids overfitting
+    ELU(Exponential linear unit) function takes care of the Vanishing gradient problem.
+    """
+
+    from keras.layers import Input, Dense, merge
+    from keras.models import Model
+    from keras.models import Sequential
+    from keras.layers import Convolution2D, Lambda, MaxPooling2D, Reshape, BatchNormalization
+    from keras.layers import Activation, Dropout, Flatten, Dense
+    from keras.optimizers import Adam
+
+    # model = Sequential()
+    # model.add(Lambda(lambda x: x/127.5-1.0, input_shape=INPUT_SHAPE))
+    # model.add(Convolution2D(24, 5, 5, activation='elu', subsample=(2, 2)))
+    # model.add(Convolution2D(36, 5, 5, activation='elu', subsample=(2, 2)))
+    # model.add(Convolution2D(48, 5, 5, activation='elu', subsample=(2, 2)))
+    # model.add(Convolution2D(64, 3, 3, activation='elu'))
+    # model.add(Convolution2D(64, 3, 3, activation='elu'))
+    # model.add(Dropout(keep_prob))
+    # model.add(Flatten())
+    # model.add(Dense(100, activation='elu'))
+    # model.add(Dense(50, activation='elu'))
+    # model.add(Dense(10, activation='elu'))
+    # model.add(Dense(1))
+    # model.summary()
+
+    def image_normm(val):
+        return val / 127.5 - 1.0
+
+    img_in = Input(shape=(120, 160, 3), name='img_in')
+    x = img_in
+    #x = Lambda(lambda image_norm, input_shape=(120, 160, 3))
+    x = Convolution2D(24, (5, 5), strides=(2, 2), activation='elu')(x)
+    x = Convolution2D(32, (5, 5), strides=(2, 2), activation='elu')(x)
+    x = Convolution2D(48, (5, 5), strides=(2, 2), activation='elu')(x)
+    x = Convolution2D(64, (3, 3), strides=(1, 1), activation='elu')(x)
+    x = Convolution2D(64, (3, 3), strides=(1, 1), activation='elu')(x)
+
+    x = Dropout(keep_prob)(x)
+    x = Flatten(name='flattened')(x)
+    x = Dense(100, activation='elu')(x)
+    x = Dense(50, activation='elu')(x)
+    x = Dense(10, activation='elu')(x)
+
+    # categorical output of the angle
+    angle_out = Dense(15, activation='softmax', name='angle_out')(x)
+
+    # continous output of throttle
+    throttle_out = Dense(1, activation='linear', name='throttle_out')(x)
+
+    model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
+
+    model.compile(optimizer=Adam(lr=learning_rate),
+                  loss={'angle_out': 'mean_squared_error',
+                        'throttle_out': 'mean_squared_error'},
+                  loss_weights={'angle_out': 0.9, 'throttle_out': 0.1})
+
+    return model

@@ -4,7 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>]
-    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard=<True or False>]
+    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard=<True/False>] [--epochs=<number>]
     manage.py calibrate
 """
 
@@ -50,7 +50,9 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
     
     # Run the pilot if the mode is not user
-    kl = dk.parts.KerasCategorical()                                            # There is also KereasLinear()
+    # There is also KereasLinear()
+    # kl = dk.parts.KerasCategorical()
+    kl = dk.parts.KerasNvidaEndToEnd()
     if model_path:
         print(model_path)
         kl.load(model_path)
@@ -112,11 +114,11 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
-
-def train(tub_names, model_name, tensorboard=False):
+def train(tub_names, model_name, tensorboard=False, num_epochs=500):
 
     # Set the Neural Network type (Categorical or Linear)
-    kl = dk.parts.KerasCategorical()
+    # kl = dk.parts.KerasCategorical()
+    kl = dk.parts.KerasNvidaEndToEnd()
 
     # Set the model name with model path
     model_path = os.path.join(MODELS_PATH, model_name)
@@ -153,7 +155,11 @@ def train(tub_names, model_name, tensorboard=False):
     val_gens = [gen[1] for gen in gens]
 
     # Train with the data loaded from the tubs
-    kl.train(combined_gen(train_gens), combined_gen(val_gens), saved_model_path=model_path, tensorboard=tensorboard)
+    kl.train(combined_gen(train_gens),
+             combined_gen(val_gens),
+             num_epochs=num_epochs,
+             saved_model_path=model_path,
+             tensorboard=tensorboard)
 
 
 def calibrate():
@@ -171,7 +177,11 @@ if __name__ == '__main__':
     if args['drive']:
         model = args['--model']
         web = args['--web']
+        if web is None:
+            web = False
         throttle = args['--throttle']
+        if throttle is None:
+            throttle = 0.25
         drive(model_path=model, web_control=web, max_throttle=throttle)
     elif args['calibrate']:
         calibrate()
@@ -179,7 +189,12 @@ if __name__ == '__main__':
         tub = args['--tub']
         model = args['--model']
         tensorboard = args['--tensorboard']
-        train(tub, model, tensorboard=tensorboard)
+        if tensorboard is None:
+            tensorboard = False
+        epochs = args['--epochs']
+        if epochs is None:
+            epochs = 500
+        train(tub, model, tensorboard=tensorboard, num_epochs=int(epochs))
 
 
 
