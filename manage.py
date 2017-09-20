@@ -4,7 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>]
-    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard=<True/False>] [--epochs=<number>]
+    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard] [--epochs=<number>] [--lr=<Learning Rate>]
     manage.py calibrate
 """
 
@@ -114,11 +114,11 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
-def train(tub_names, model_name, tensorboard=False, num_epochs=500):
+def train(tub_names, model_name, tensorboard=False, num_epochs=500, lr=1.0e-4):
 
     # Set the Neural Network type (Categorical or Linear)
     # kl = dk.parts.KerasCategorical()
-    kl = dk.parts.KerasNvidaEndToEnd()
+    kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr)
 
     # Set the model name with model path
     model_path = os.path.join(MODELS_PATH, model_name)
@@ -191,10 +191,20 @@ if __name__ == '__main__':
         tensorboard = args['--tensorboard']
         if tensorboard is None:
             tensorboard = False
+        else:
+            tensorboard = True
         epochs = args['--epochs']
         if epochs is None:
             epochs = 500
-        train(tub, model, tensorboard=tensorboard, num_epochs=int(epochs))
+        else:
+            epochs = int(epochs)	
+        lr = args['--lr']
+        if lr is None:
+            lr = 1.0e-4
+        else:
+            lr = float(lr)
+
+        train(tub, model, tensorboard=False, num_epochs=epochs, lr=lr)
 
 
 
