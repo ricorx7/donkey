@@ -64,7 +64,7 @@ class KerasPilot():
 	    # This will create a Graph directory
             # Run tensorboard --logdir path_to/Graph
             tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph',
-                                                     histogram_freq=1,  # Histogram frequency
+                                                     histogram_freq=0,  # Histogram frequency
                                                      write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
                                                      write_graph=True,  # Write graph to describe network
                                                      write_images=True,

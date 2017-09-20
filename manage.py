@@ -188,23 +188,25 @@ if __name__ == '__main__':
     elif args['train']:
         tub = args['--tub']
         model = args['--model']
-        tensorboard = args['--tensorboard']
-        if tensorboard is None:
-            tensorboard = False
-        else:
+        
+        tensorboard = False
+        if args['--tensorboard']:
             tensorboard = True
-        epochs = args['--epochs']
-        if epochs is None:
-            epochs = 500
-        else:
-            epochs = int(epochs)	
-        lr = args['--lr']
-        if lr is None:
-            lr = 1.0e-4
-        else:
-            lr = float(lr)
+        
+        epochs = 500
+        if args['--epochs']:
+            epochs = int(args['--epochs'])
+        
+        lr = 1.0e-4
+        if args['--lr']:
+            lr = float(args['--lr'])
+        
+        print("Epochs: ", epochs)
+        print("Tensorboard: ", tensorboard)
+        print("Learning Rate: ", lr)
 
-        train(tub, model, tensorboard=False, num_epochs=epochs, lr=lr)
+
+        train(tub, model, tensorboard=tensorboard, num_epochs=epochs, lr=lr)
 
 
 
