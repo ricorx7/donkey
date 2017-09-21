@@ -25,7 +25,7 @@ community contributions.
 ### Getting started. 
 After building a Donkey2, here are the steps to start driving.
 
-####Install donkey
+#### Install donkey
 ```
 git clone https://github.com/wroscoe/donkey donkeycar
 pip install -e donkeycar
@@ -33,14 +33,14 @@ pip install -e donkeycar
  
  
 
-####Create a car folder.
+#### Create a car folder.
 ```
 donkey createcar --path ~/d2
 ```
  
  
  
-####Start your car.
+#### Start your car.
 ```
 python ~/d2/manage.py drive --throttle=0.25
 ```
@@ -57,7 +57,7 @@ This is because the timing of when you take a turn and the angle of the turn wil
  
  
 
-####Train based off the recorded data
+#### Train based off the recorded data
 ```bash
 python ~/d2/manage.py train --model=any_model_name --/full/path/to/data/tub_XXX... 
 ```
@@ -69,7 +69,7 @@ This will create a model with the given name in the ~/d2/models folder.
  
  
  
-####Drive Autonomous
+#### Drive Autonomous
 ```bash
 python ~/d2/manage.py drive --model=any_model_name --throttle=0.25
 ```
@@ -79,7 +79,7 @@ You will need to change the mode to 'Local_Angle'.  This will cause the steering
 Set the same throttle value as when you trained and max the throttle and let it steer autonomously.
  
  
-####View Tensorboard
+#### View Tensorboard
 ```bash
 python ~/d2/manage.py train --tensorboard=True --model=any_model_name --tubs=/full/path/to/tub_XX_XX-XX-XX 
 ```
@@ -95,7 +95,7 @@ val_angle_out_loss, val_throttle_out_loss and val_loss are based off the validat
 
 
 
-####Modifying Source Code/Reinstall
+#### Modifying Source Code/Reinstall
 If you modify the source code, you will need to reinstall the donkeycar.  Run these 
 commands to reinstall donkeycar with your modified source code.
 ```bash

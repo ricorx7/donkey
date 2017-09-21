@@ -42,7 +42,7 @@ class KerasPilot():
 
         #checkpoint to save model after each epoch
         save_best = keras.callbacks.ModelCheckpoint(saved_model_path,
-                                                    monitor='loss',
+                                                    monitor='val_loss',
                                                     verbose=1,
                                                     save_best_only=True, 
                                                     mode='min')
@@ -50,7 +50,7 @@ class KerasPilot():
         #stop training if the validation error stops improving.
         #early_stop = keras.callbacks.EarlyStopping(monitor='loss',
         #                                           min_delta=.0005,
-        #                                           patience=4,
+        #                                           patience=5,
         #                                           verbose=1,
         #                                           mode='auto')
         #
@@ -61,19 +61,19 @@ class KerasPilot():
         # Add Tensorboard callback
         if tensorboard:
             print("Using Tensorboard")
-	    # This will create a Graph directory
+	        # This will create a Graph directory
             # Run tensorboard --logdir path_to/Graph
             tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph',
-                                                     histogram_freq=0,  # Histogram frequency
+                                                     histogram_freq=0,      # Histogram frequency - Does NOT work, val_gen is a generator and not data
                                                      write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
-                                                     write_graph=True,  # Write graph to describe network
+                                                     write_graph=True,      # Write graph to describe network
                                                      write_images=True,
                                                      # Write model weights to visualize as image in TensorBoard.
                                                      # embeddings_freq=3,     # Frequency selected embedding layers will be saved
                                                      # embeddings_layer_names=list(embeddings_metadata.keys()),
                                                      # embeddings_metadata=embeddings_metadata
                                                      embeddings_freq=1,
-                                                     embeddings_layer_names=['dense_1', 'dense_2'],
+                                                     embeddings_layer_names=['dense_1', 'dense_2', 'dense_3'],
                                                      batch_size=5
                                                      )
             callbacks_list = [save_best, tbCallBack]
