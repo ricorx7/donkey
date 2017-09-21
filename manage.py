@@ -114,7 +114,7 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
-def train(tub_names, model_name, tensorboard=False, num_epochs=500, lr=1.0e-4):
+def train(tub_names, model_name, tensorboard=False, epochs=500, lr=1.0e-4):
 
     # Set the Neural Network type (Categorical or Linear)
     # kl = dk.parts.KerasCategorical()
@@ -157,7 +157,7 @@ def train(tub_names, model_name, tensorboard=False, num_epochs=500, lr=1.0e-4):
     # Train with the data loaded from the tubs
     kl.train(combined_gen(train_gens),
              combined_gen(val_gens),
-             num_epochs=num_epochs,
+             epochs=epochs,
              saved_model_path=model_path,
              tensorboard=tensorboard)
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
         print("Learning Rate: ", lr)
 
 
-        train(tub, model, tensorboard=tensorboard, num_epochs=epochs, lr=lr)
+        train(tub, model, tensorboard=tensorboard, epochs=epochs, lr=lr)
 
 
 

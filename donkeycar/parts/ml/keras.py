@@ -26,12 +26,12 @@ class KerasPilot():
     def load(self, model_path):
         self.model = keras.models.load_model(model_path)
         self.model.summary()
-    
+
     def train(self,
               train_gen,
               val_gen,
               saved_model_path,
-              num_epochs=500,                   # Nvidia uses 20000
+              epochs=500,                   # Nvidia uses 20000
               steps=10,
               tensorboard=False):
         
@@ -81,7 +81,7 @@ class KerasPilot():
         hist = self.model.fit_generator(
                         train_gen, 
                         steps_per_epoch=steps, 
-                        epochs=num_epochs,
+                        epochs=epochs,
                         verbose=1, 
                         validation_data=val_gen,
                         callbacks=callbacks_list,
@@ -104,11 +104,16 @@ class KerasCategorical(KerasPilot):
         angle_unbinned = utils.linear_unbin(angle_binned)
         return angle_unbinned, throttle[0][0]
     
-
+    
+    
 class KerasLinear(KerasPilot):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model=None, *args, **kwargs):
         super(KerasLinear, self).__init__(*args, **kwargs)
-        
+        if model:
+            self.model = model
+        else:
+            self.model = default_linear()
+
     def run(self, img_arr):
         img_arr = img_arr.reshape((1,) + img_arr.shape)
         angle, throttle = self.model.predict(img_arr)
@@ -161,12 +166,10 @@ def default_categorical():
     throttle_out = Dense(1, activation='relu', name='throttle_out')(x)      # Reduce to 1 number, Positive number only
     
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
-    
-    
     model.compile(optimizer='rmsprop',
                   loss={'angle_out': 'categorical_crossentropy', 
                         'throttle_out': 'mean_absolute_error'},
-                  loss_weights={'angle_out': 0.9, 'throttle_out': 0.1})
+                  loss_weights={'angle_out': 0.9, 'throttle_out': .001})
 
     return model
 
@@ -187,7 +190,7 @@ def default_linear():
     x = Convolution2D(64, (3,3), strides=(1,1), activation='relu')(x)
     
     x = Flatten(name='flattened')(x)
-    x = Dense(100, activation='linear')(x)                                  # Linear vs ReLU, Linear includes negatives
+    x = Dense(100, activation='linear')(x)
     x = Dropout(.1)(x)
     x = Dense(50, activation='linear')(x)
     x = Dropout(.1)(x)
@@ -203,7 +206,7 @@ def default_linear():
     model.compile(optimizer='rmsprop',
                   loss={'angle_out': 'mean_squared_error', 
                         'throttle_out': 'mean_squared_error'},
-                  loss_weights={'angle_out': 0.9, 'throttle_out': .1})
+                  loss_weights={'angle_out': 0.9, 'throttle_out': .001})
 
     return model
 
@@ -240,7 +243,7 @@ def default_relu():
     model.compile(optimizer='rmsprop',
                   loss={'angle_out': 'mean_squared_error', 
                         'throttle_out': 'mean_squared_error'},
-                  loss_weights={'angle_out': 0.9, 'throttle_out': .1})
+                  loss_weights={'angle_out': 0.9, 'throttle_out': .001})
 
     return model
 
@@ -320,6 +323,6 @@ def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-4):
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss={'angle_out': 'mean_squared_error',
                         'throttle_out': 'mean_squared_error'},
-                  loss_weights={'angle_out': 0.9, 'throttle_out': 0.1})
+                  loss_weights={'angle_out': 0.9, 'throttle_out': 0.001})
 
     return model
