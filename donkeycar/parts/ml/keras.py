@@ -21,63 +21,73 @@ from ... import utils
 import donkeycar as dk
 from donkeycar import utils
 
+
 class KerasPilot():
  
     def load(self, model_path):
         self.model = keras.models.load_model(model_path)
         self.model.summary()
 
+    """
+    Train the model with the given data and validation data.
+    
+    train_gen: generator that yields an array of images (Random 90% of given data in Tub)
+    val_gen: Generator that yields an array of image  (Random 10% of given data in Tub) 
+    saved_model_path: Path to save the model
+    epochs: Number of times to train on the data.
+    steps: How many steps per epoch.
+    is_early_stop: Stop early if the training does not improve.
+    is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
+    """
     def train(self,
               train_gen,
               val_gen,
               saved_model_path,
-              epochs=500,                   # Nvidia uses 20000
+              epochs=500,
               steps=10,
-              tensorboard=False):
-        
-        """
-        train_gen: generator that yields an array of images an array of 
-        
-        """
+              is_early_stop=True,
+              is_tensorboard=False):
 
-        #checkpoint to save model after each epoch
+        # Checkpoint to save model after each epoch
         save_best = keras.callbacks.ModelCheckpoint(saved_model_path,
                                                     monitor='val_loss',
                                                     verbose=1,
                                                     save_best_only=True, 
                                                     mode='min')
-        
-        #stop training if the validation error stops improving.
-        #early_stop = keras.callbacks.EarlyStopping(monitor='loss',
-        #                                           min_delta=.0005,
-        #                                           patience=5,
-        #                                           verbose=1,
-        #                                           mode='auto')
-        #
-        #callbacks_list = [save_best, early_stop]
 
+        # At the very least, we need to train and save the model with checkpoints
         callbacks_list = [save_best]
 
-        # Add Tensorboard callback
-        if tensorboard:
-            print("Using Tensorboard")
-	        # This will create a Graph directory
-            # Run tensorboard --logdir path_to/Graph
-            tbCallBack = keras.callbacks.TensorBoard(log_dir='./Graph',
-                                                     histogram_freq=0,      # Histogram frequency - Does NOT work, val_gen is a generator and not data
-                                                     write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
-                                                     write_graph=True,      # Write graph to describe network
-                                                     write_images=True,
-                                                     # Write model weights to visualize as image in TensorBoard.
-                                                     # embeddings_freq=3,     # Frequency selected embedding layers will be saved
-                                                     # embeddings_layer_names=list(embeddings_metadata.keys()),
-                                                     # embeddings_metadata=embeddings_metadata
-                                                     embeddings_freq=1,
-                                                     embeddings_layer_names=['dense_1', 'dense_2', 'dense_3'],
-                                                     batch_size=5
-                                                     )
-            callbacks_list = [save_best, tbCallBack]
+        # Stop training if the validation error stops improving.
+        if is_early_stop:
+            early_stop = keras.callbacks.EarlyStopping(monitor='loss',
+                                                       min_delta=.0005,
+                                                       patience=5,
+                                                       verbose=1,
+                                                       mode='auto')
 
+            callbacks_list.append(early_stop)
+
+        # Add Tensorboard callback
+        # This will create a Graph directory
+        # Run tensorboard --logdir path_to/Graph
+        if is_tensorboard:
+            tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph',
+                                                      histogram_freq=0,      # Histogram frequency - Does NOT work, val_gen is a generator and not data
+                                                      write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
+                                                      write_graph=True,      # Write graph to describe network
+                                                      write_images=True,
+                                                      # Write model weights to visualize as image in TensorBoard.
+                                                      # embeddings_freq=3,     # Frequency selected embedding layers will be saved
+                                                      # embeddings_layer_names=list(embeddings_metadata.keys()),
+                                                      # embeddings_metadata=embeddings_metadata
+                                                      embeddings_freq=1,
+                                                      embeddings_layer_names=['dense_1', 'dense_2', 'dense_3'],
+                                                      batch_size=5
+                                                      )
+            callbacks_list.append(tb_callback)
+
+        # Start to train the model
         hist = self.model.fit_generator(
                         train_gen, 
                         steps_per_epoch=steps, 
@@ -89,6 +99,9 @@ class KerasPilot():
         return hist
 
 
+"""
+Use ReLU activation.
+"""
 class KerasCategorical(KerasPilot):
     def __init__(self, model=None, *args, **kwargs):
         super(KerasCategorical, self).__init__(*args, **kwargs)
@@ -103,9 +116,10 @@ class KerasCategorical(KerasPilot):
         #angle_certainty = max(angle_binned[0])
         angle_unbinned = utils.linear_unbin(angle_binned)
         return angle_unbinned, throttle[0][0]
-    
-    
-    
+
+"""
+Use Linear activation
+"""
 class KerasLinear(KerasPilot):
     def __init__(self, model=None, *args, **kwargs):
         super(KerasLinear, self).__init__(*args, **kwargs)
@@ -121,6 +135,9 @@ class KerasLinear(KerasPilot):
         return angle[0][0], throttle[0][0]
 
 
+"""
+Reuse the Nvidia End to End paper for the Neural Network
+"""
 class KerasNvidaEndToEnd(KerasPilot):
     def __init__(self, model=None, learning_rate=1.0e-4, *args, **kwargs):
         super(KerasNvidaEndToEnd, self).__init__(*args, **kwargs)
@@ -135,7 +152,6 @@ class KerasNvidaEndToEnd(KerasPilot):
         # angle_certainty = max(angle_binned[0])
         angle_unbinned = utils.linear_unbin(angle_binned)
         return angle_unbinned, throttle[0][0]
-
 
 
 def default_categorical():
@@ -174,7 +190,6 @@ def default_categorical():
     return model
 
 
-
 def default_linear():
     from keras.layers import Input, Dense, merge
     from keras.models import Model
@@ -209,7 +224,6 @@ def default_linear():
                   loss_weights={'angle_out': 0.9, 'throttle_out': .001})
 
     return model
-
 
 
 def default_relu():
@@ -247,12 +261,13 @@ def default_relu():
 
     return model
 
-
-# Found here:
-# https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
-# https://www.youtube.com/watch?v=EaY5QiZwSP4
-# https://github.com/llSourcell/How_to_simulate_a_self_driving_car/blob/master/model.py
-def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-4):
+"""
+Found here:
+https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
+https://www.youtube.com/watch?v=EaY5QiZwSP4
+https://github.com/llSourcell/How_to_simulate_a_self_driving_car/blob/master/model.py
+"""
+def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
     """
     NVIDIA model used
     Image normalization to avoid saturation and make gradients work better.
@@ -315,7 +330,7 @@ def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-4):
     # categorical output of the angle
     angle_out = Dense(15, activation='softmax', name='angle_out')(x)
 
-    # continous output of throttle
+    # continuous output of throttle
     throttle_out = Dense(1, activation='linear', name='throttle_out')(x)
 
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])

@@ -17,3 +17,6 @@ pip install -e .
 echo "Copying manage.py to " $RSYNC_RPI3_FOLDER
 cp manage.py $RSYNC_RPI3_FOLDER
 
+# Move the config.py file, it may be updated
+echo "Copying config.py to " $RSYNC_RPI3_FOLDER
+cp config.py $RSYNC_RPI3_FOLDER

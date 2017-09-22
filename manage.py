@@ -4,7 +4,7 @@ Scripts to drive a donkey 2 car and train a model for it.
 
 Usage:
     manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>]
-    manage.py train (--tub=<tub>) (--model=<model>) [--tensorboard] [--epochs=<number>] [--lr=<Learning Rate>]
+    manage.py train (--tub=<tub>) (--model=<model>)
     manage.py calibrate
 """
 
@@ -13,12 +13,16 @@ import os
 from docopt import docopt
 import donkeycar as dk
 
-CAR_PATH = PACKAGE_PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = os.path.join(CAR_PATH, 'data')
-MODELS_PATH = os.path.join(CAR_PATH, 'models')
 
-
-def drive(model_path=None, web_control=False, max_throttle=0.40):
+def drive(cfg, model_path=None):
+    """
+    Drive the car.
+    You will either drive to record data for training or drive to test the autonomous mode.
+    Either use Web controls or Joystick to control the vehicle.
+    If driving autonomous, give the model to load.
+    :param cfg: Configuration for user defined values.
+    :param model_path: Path to load the model.
+    """
     #Initialized car
     V = dk.vehicle.Vehicle()
 
@@ -29,10 +33,10 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     # Select if only use bluetooth PS3 controller
     # Or web controller
     # Also set the max throttle
-    if web_control:
+    if cfg.IS_WEB_CONTROL:
         ctr = dk.parts.LocalWebController()
     else:
-        ctr = dk.parts.JoystickPilot(max_throttle=float(max_throttle))
+        ctr = dk.parts.JoystickPilot(max_throttle=float(cfg.JOYSTICK_MAX_THROTTLE))
     V.add(ctr,
           inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
@@ -48,11 +52,19 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
         
     pilot_condition_part = dk.parts.Lambda(pilot_condition)
     V.add(pilot_condition_part, inputs=['user/mode'], outputs=['run_pilot'])
-    
+
+    # Determine which training model to use
     # Run the pilot if the mode is not user
-    # There is also KereasLinear()
-    # kl = dk.parts.KerasCategorical()
-    kl = dk.parts.KerasNvidaEndToEnd()
+    # Default model type is Categorical
+    kl = dk.parts.KerasCategorical()
+
+    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_LINEAR:
+        kl = dk.parts.KerasLinear()
+
+    # Check if other model type was selected
+    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_NVIDIA:
+        kl = dk.parts.KerasNvidaEndToEnd()
+
     if model_path:
         print(model_path)
         kl.load(model_path)
@@ -104,7 +116,7 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
              'float', 'float',
              'str']
     
-    th = dk.parts.TubHandler(path=DATA_PATH)
+    th = dk.parts.TubHandler(path=cfg.DATA_PATH)
     tub_writer = th.new_tub_writer(inputs=inputs, types=types)
     V.add(tub_writer, inputs=inputs, run_condition='recording')
     
@@ -114,20 +126,40 @@ def drive(model_path=None, web_control=False, max_throttle=0.40):
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 
 
-def train(tub_names, model_name, tensorboard=False, epochs=500, lr=1.0e-4):
+def train(cfg, tub_names, model_name):
+    """
+    Train the model using the neural network based off the tubs given.
+    The tubs contain the recorded data.
+    :param cfg: Configuration for user settings.
+    :param tub_names: Tubs to load.  This must be the full path.
+    :param model_name: Name of the model to create.
+    """
+    # Get the configuration
+    tensorboard = cfg.IS_TENSORBOARD
+    epochs = cfg.EPOCHS
+    lr = cfg.LEARNING_RATE
+    is_stop_early = cfg.IS_EARLY_STOP
 
-    # Set the Neural Network type (Categorical or Linear)
-    # kl = dk.parts.KerasCategorical()
-    kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr)
+    # Determine which training model to use
+    # Run the pilot if the mode is not user
+    # Default model type is Categorical
+    kl = dk.parts.KerasCategorical()
+
+    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_LINEAR:
+        kl = dk.parts.KerasLinear()
+
+    # Check if other model type was selected
+    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_NVIDIA:
+        kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr)
 
     # Set the model name with model path
-    model_path = os.path.join(MODELS_PATH, model_name)
+    model_path = os.path.join(cfg.MODELS_PATH, model_name)
 
     # Set the complete path for each tub listed
     if tub_names:
-        tub_paths = [os.path.join(DATA_PATH, n.strip()) for n in tub_names.split(',')]
+        tub_paths = [os.path.join(cfg.DATA_PATH, n.strip()) for n in tub_names.split(',')]
     else:
-        tub_paths = [os.path.join(DATA_PATH, n.strip()) for n in os.listdir(DATA_PATH)]
+        tub_paths = [os.path.join(cfg.DATA_PATH, n.strip()) for n in os.listdir(cfg.DATA_PATH)]
     tubs = [dk.parts.Tub(p) for p in tub_paths]
 
     def rt(record):
@@ -159,7 +191,8 @@ def train(tub_names, model_name, tensorboard=False, epochs=500, lr=1.0e-4):
              combined_gen(val_gens),
              epochs=epochs,
              saved_model_path=model_path,
-             tensorboard=tensorboard)
+             is_early_stop=is_stop_early,
+             is_tensorboard=tensorboard)
 
 
 def calibrate():
@@ -174,39 +207,19 @@ def calibrate():
 if __name__ == '__main__':
     args = docopt(__doc__)
 
+    # Put config.py in the same location as manage.py
+    my_cfg = dk.load_config()
+
     if args['drive']:
-        model = args['--model']
-        web = args['--web']
-        if web is None:
-            web = False
-        throttle = args['--throttle']
-        if throttle is None:
-            throttle = 0.25
-        drive(model_path=model, web_control=web, max_throttle=throttle)
+        drive(my_cfg, model_path=args['--model'])
+
     elif args['calibrate']:
         calibrate()
+
     elif args['train']:
         tub = args['--tub']
         model = args['--model']
-        
-        tensorboard = False
-        if args['--tensorboard']:
-            tensorboard = True
-        
-        epochs = 500
-        if args['--epochs']:
-            epochs = int(args['--epochs'])
-        
-        lr = 1.0e-4
-        if args['--lr']:
-            lr = float(args['--lr'])
-        
-        print("Epochs: ", epochs)
-        print("Tensorboard: ", tensorboard)
-        print("Learning Rate: ", lr)
-
-
-        train(tub, model, tensorboard=tensorboard, epochs=epochs, lr=lr)
+        train(my_cfg, tub, model)
 
 
 
