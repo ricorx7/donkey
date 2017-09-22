@@ -60,6 +60,7 @@ class KerasPilot():
 
         # Stop training if the validation error stops improving.
         if is_early_stop:
+            print("Using Early Stop")
             early_stop = keras.callbacks.EarlyStopping(monitor='loss',
                                                        min_delta=.0005,
                                                        patience=5,
@@ -72,8 +73,9 @@ class KerasPilot():
         # This will create a Graph directory
         # Run tensorboard --logdir path_to/Graph
         if is_tensorboard:
+            print("Using Tensorboard")
             tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph',
-                                                      histogram_freq=0,      # Histogram frequency - Does NOT work, val_gen is a generator and not data
+                                                      histogram_freq=1,      # Histogram frequency - Does NOT work, val_gen is a generator and not data
                                                       write_grads=True,      # Write Histogram, histogram_freq must be greater than 0
                                                       write_graph=True,      # Write graph to describe network
                                                       write_images=True,

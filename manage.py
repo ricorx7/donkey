@@ -142,15 +142,18 @@ def train(cfg, tub_names, model_name):
 
     # Determine which training model to use
     # Run the pilot if the mode is not user
-    # Default model type is Categorical
-    kl = dk.parts.KerasCategorical()
-
     if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_LINEAR:
+        print("LINEAR MODEL")
         kl = dk.parts.KerasLinear()
-
     # Check if other model type was selected
-    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_NVIDIA:
+    elif cfg.TRAINING_MODEL == cfg.MODEL_TYPE_NVIDIA:
+        print("NVIDIA MODEL")
         kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr)
+    else:
+        print("CATEGORICAL MODEL")
+        # Default model type is Categorical
+        kl = dk.parts.KerasCategorical()
+
 
     # Set the model name with model path
     model_path = os.path.join(cfg.MODELS_PATH, model_name)
