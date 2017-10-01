@@ -56,7 +56,8 @@ def drive(cfg, model_path=None):
     # Determine which training model to use
     # Run the pilot if the mode is not user
     # Default model type is Categorical
-    kl = dk.parts.KerasCategorical()
+    if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_CATEGORICAL:
+        kl = dk.parts.KerasCategorical()
 
     if cfg.TRAINING_MODEL == cfg.MODEL_TYPE_LINEAR:
         kl = dk.parts.KerasLinear()

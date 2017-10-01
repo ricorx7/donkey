@@ -336,7 +336,6 @@ def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
     throttle_out = Dense(1, activation='linear', name='throttle_out')(x)
 
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
-
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss={'angle_out': 'mean_squared_error',
                         'throttle_out': 'mean_squared_error'},
