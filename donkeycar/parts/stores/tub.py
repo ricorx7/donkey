@@ -111,14 +111,48 @@ class Tub(object):
             print("Unexpected error:", sys.exc_info()[0])
             raise
 
+    def get_num_records(self):
+        import glob
+        files = glob.glob(os.path.join(self.path, 'record_*.json'))
+        return len(files)
+
     def get_json_record_path(self, ix):
         return os.path.join(self.path, 'record_'+str(ix)+'.json')
 
     def get_json_record(self, ix):
         path = self.get_json_record_path(ix)
-        with open(path, 'r') as fp:
-            json_data = json.load(fp)
+        try:
+            with open(path, 'r') as fp:
+                json_data = json.load(fp)
+        except UnicodeDecodeError:
+            raise Exception('bad record: %d. You may want to run `python manage.py check --fix`' % ix)            
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            raise
+
         return json_data
+
+    def check(self, fix=False):
+        '''
+        Iterate over all records and make sure we can load them.
+        Optionally remove records that cause a problem.
+        '''
+        for ix in self.get_index(shuffled=False):
+            try:
+                self.get_record(ix)
+            except:
+                if fix == False:
+                    print('problems with record:', self.path, ix)
+                else:
+                    print('problems with record, removing:', self.path, ix)
+                    self.remove_record(ix)
+
+    def remove_record(self, ix):
+        '''
+        remove data associate with a record
+        '''
+        record = self.get_json_record_path(ix)
+        os.unlink(record)
 
     def put_record(self, data):
         """
@@ -188,12 +222,11 @@ class Tub(object):
     def record_gen(self, index=None, record_transform=None):
         if index==None:
             index=self.get_index(shuffled=True)
-        while True:
-            for i in index:
-                record = self.get_record(i)
-                if record_transform:
-                    record = record_transform(record)
-                yield record
+        for i in index:
+            record = self.get_record(i)
+            if record_transform:
+                record = record_transform(record)
+            yield record
 
     def batch_gen(self, keys=None, index=None, batch_size=128,
                   record_tranform=None):
@@ -227,7 +260,7 @@ class Tub(object):
             
     def train_val_gen(self, X_keys, Y_keys, batch_size=32, record_transform=None, train_split=.8):
         index = self.get_index(shuffled=True)
-        train_cutoff = int(len(index)*.8)
+        train_cutoff = int(len(index)*train_split)
         train_index = index[:train_cutoff]
         val_index = index[train_cutoff:]
     

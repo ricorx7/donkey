@@ -21,24 +21,13 @@ from ... import utils
 import donkeycar as dk
 from donkeycar import utils
 
-
 class KerasPilot():
  
     def load(self, model_path):
         self.model = keras.models.load_model(model_path)
         self.model.summary()
 
-    """
-    Train the model with the given data and validation data.
-    
-    train_gen: generator that yields an array of images (Random 90% of given data in Tub)
-    val_gen: Generator that yields an array of image  (Random 10% of given data in Tub) 
-    saved_model_path: Path to save the model
-    epochs: Number of times to train on the data.
-    steps: How many steps per epoch.
-    is_early_stop: Stop early if the training does not improve.
-    is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
-    """
+
     def train(self,
               train_gen,
               val_gen,
@@ -47,11 +36,23 @@ class KerasPilot():
               steps=10,
               is_early_stop=True,
               is_tensorboard=False):
+        """
+        Train the model with the given data and validation data.
 
-        # Checkpoint to save model after each epoch
-        save_best = keras.callbacks.ModelCheckpoint(saved_model_path,
-                                                    monitor='val_loss',
-                                                    verbose=1,
+        train_gen: generator that yields an array of images (Random 90% of given data in Tub)
+        val_gen: Generator that yields an array of image  (Random 10% of given data in Tub)
+        saved_model_path: Path to save the model
+        epochs: Number of times to train on the data.
+        steps: How many steps per epoch.
+        is_early_stop: Stop early if the training does not improve.
+        is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
+        """
+
+
+        #checkpoint to save model after each epoch
+        save_best = keras.callbacks.ModelCheckpoint(saved_model_path, 
+                                                    monitor='val_loss', 
+                                                    verbose=1, 
                                                     save_best_only=True, 
                                                     mode='min')
 
@@ -93,11 +94,11 @@ class KerasPilot():
         hist = self.model.fit_generator(
                         train_gen, 
                         steps_per_epoch=steps, 
-                        epochs=epochs,
+                        epochs=epochs, 
                         verbose=1, 
                         validation_data=val_gen,
-                        callbacks=callbacks_list,
-                        validation_steps=steps*.2)
+                        callbacks=callbacks_list, 
+                        validation_steps=steps*(1.0 - train_split))
         return hist
 
 
@@ -110,7 +111,7 @@ class KerasCategorical(KerasPilot):
         if model:
             self.model = model
         else:
-            self.model = default_categorical()                              # There is also relu or linear
+            self.model = default_categorical()
         
     def run(self, img_arr):
         img_arr = img_arr.reshape((1,) + img_arr.shape)
