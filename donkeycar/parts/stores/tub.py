@@ -117,7 +117,7 @@ class Tub(object):
         return len(files)
 
     def get_json_record_path(self, ix):
-        return os.path.join(self.path, 'record_'+str(ix)+'.json')
+        return os.path.join(self.path, 'record_'+str(ix).zfill(7)+'.json')
 
     def get_json_record(self, ix):
         path = self.get_json_record_path(ix)
@@ -204,9 +204,8 @@ class Tub(object):
 
         return data
 
-
     def make_file_name(self, key, ext='.png'):
-        name = '_'.join([str(self.current_ix), key, ext])
+        name = '_'.join([str(self.current_ix).zfill(7), key, ext])
         name = name = name.replace('/', '-')
         return name
 

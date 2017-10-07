@@ -198,7 +198,9 @@ class JoystickPilot():
                  throttle_axis='rz',            # 'rx' 0x03
                  steering_scale=1.0,            # No Scale
                  throttle_scale=-1.0,           # Negative Scale
-                 dev_fn='/dev/input/js0'):
+                 dev_fn='/dev/input/js0',       # Path to the joystick
+                 invert_steering_angle = False  # Flag if steering angle should be inverted
+                 ):
 
         self.angle = 0.0
         self.throttle = 0.0
@@ -212,6 +214,16 @@ class JoystickPilot():
         self.throttle_scale = throttle_scale
         self.recording = False
         self.constant_throttle = False
+
+        '''
+        It is suggest to invert the steering angle when running through the CNN.  
+        We use 1/r instead of r to prevent a singularity when driving straight 
+        (the turning radius for driving straight is infinity).
+        1/r smoothly transitions through zero from left turns (negative values) 
+        to right turns (positive values).     
+        Set in config.py    
+        '''
+        self.invert_steering_angle = invert_steering_angle
 
         #init joystick
         self.js = Joystick(dev_fn)
@@ -251,6 +263,11 @@ class JoystickPilot():
             if axis == self.steering_axis:
                 self.angle = self.steering_scale * axis_val
                 print("angle", self.angle)
+
+                # Check if inverting the steering angle
+                if self.invert_steering_angle:
+                    self.angle = 1 / self.angle
+
 
             if axis == self.throttle_axis:
                 #this value is often reversed, with positive value when pulling down

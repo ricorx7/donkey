@@ -57,3 +57,8 @@ IS_TENSORBOARD = True                       # Create a Graph directory and recor
 IS_EARLY_STOP = False                       # If the data does not improve, stop training early
 LEARNING_RATE = 1.0e-5                      # Learn rate.  Decrease to fix bias
 EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training
+
+# Nvidia End-To-End Paper
+INVERT_STEERING_ANGLE = True                # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
+FPS = 10                                    # DEFAULT: 20.  A higher sampling rate would result in including images that are highly similar and thus not provide much useful information.
+

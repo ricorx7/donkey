@@ -1,16 +1,11 @@
-'''
-
+"""
 pilots.py
 
 Methods to create, use, save and load pilots. Pilots 
 contain the highlevel logic used to determine the angle
 and throttle of a vehicle. Pilots can include one or more 
-models to help direct the vehicles motion. 
-
-'''
-
-
-
+models to help direct the vehicles motion.
+"""
 
 import os
 import numpy as np
@@ -27,13 +22,13 @@ class KerasPilot():
         self.model = keras.models.load_model(model_path)
         self.model.summary()
 
-
     def train(self,
               train_gen,
               val_gen,
               saved_model_path,
               epochs=500,
               steps=10,
+              train_split=0.8,
               is_early_stop=True,
               is_tensorboard=False):
         """
@@ -102,10 +97,10 @@ class KerasPilot():
         return hist
 
 
-"""
-Use ReLU activation.
-"""
 class KerasCategorical(KerasPilot):
+    """
+    Use ReLU activation.
+    """
     def __init__(self, model=None, *args, **kwargs):
         super(KerasCategorical, self).__init__(*args, **kwargs)
         if model:
@@ -120,10 +115,11 @@ class KerasCategorical(KerasPilot):
         angle_unbinned = utils.linear_unbin(angle_binned)
         return angle_unbinned, throttle[0][0]
 
-"""
-Use Linear activation
-"""
+
 class KerasLinear(KerasPilot):
+    """
+    Use Linear activation
+    """
     def __init__(self, model=None, *args, **kwargs):
         super(KerasLinear, self).__init__(*args, **kwargs)
         if model:
@@ -138,10 +134,10 @@ class KerasLinear(KerasPilot):
         return angle[0][0], throttle[0][0]
 
 
-"""
-Reuse the Nvidia End to End paper for the Neural Network
-"""
 class KerasNvidaEndToEnd(KerasPilot):
+    """
+    Reuse the Nvidia End to End paper for the Neural Network
+    """
     def __init__(self, model=None, learning_rate=1.0e-4, *args, **kwargs):
         super(KerasNvidaEndToEnd, self).__init__(*args, **kwargs)
         if model:
@@ -248,15 +244,14 @@ def default_relu():
     x = Dropout(.1)(x)
     x = Dense(50, activation='relu')(x)
     x = Dropout(.1)(x)
-    #categorical output of the angle
+    # categorical output of the angle
     angle_out = Dense(1, activation='relu', name='angle_out')(x)
     
-    #continous output of throttle
+    # continous output of throttle
     throttle_out = Dense(1, activation='relu', name='throttle_out')(x)
     
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
-    
-    
+
     model.compile(optimizer='rmsprop',
                   loss={'angle_out': 'mean_squared_error', 
                         'throttle_out': 'mean_squared_error'},
@@ -264,14 +259,14 @@ def default_relu():
 
     return model
 
-"""
-Found here:
-https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
-https://www.youtube.com/watch?v=EaY5QiZwSP4
-https://github.com/llSourcell/How_to_simulate_a_self_driving_car/blob/master/model.py
-"""
+
 def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
     """
+    Found here:
+    https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
+    https://www.youtube.com/watch?v=EaY5QiZwSP4
+    https://github.com/llSourcell/How_to_simulate_a_self_driving_car/blob/master/model.py
+
     NVIDIA model used
     Image normalization to avoid saturation and make gradients work better.
     Convolution: 5x5, filter: 24, strides: 2x2, activation: ELU

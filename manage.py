@@ -36,7 +36,8 @@ def drive(cfg, model_path=None):
     if cfg.IS_WEB_CONTROL:
         ctr = dk.parts.LocalWebController()
     else:
-        ctr = dk.parts.JoystickPilot(max_throttle=float(cfg.JOYSTICK_MAX_THROTTLE))
+        ctr = dk.parts.JoystickPilot(max_throttle=float(cfg.JOYSTICK_MAX_THROTTLE),
+                                     invert_steering_angle=cfg.INVERT_STEERING_ANGLE)
     V.add(ctr,
           inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
@@ -98,7 +99,8 @@ def drive(cfg, model_path=None):
     # Calibrate min/max/zero for throttle
     steering_controller = dk.parts.PCA9685(1)
     steering = dk.parts.PWMSteering(controller=steering_controller,
-                                    left_pulse=460, right_pulse=260)
+                                    left_pulse=460, right_pulse=260,
+                                    invert_steering_angle=cfg.INVERT_STEERING_ANGLE)
     
     throttle_controller = dk.parts.PCA9685(0)
     throttle = dk.parts.PWMThrottle(controller=throttle_controller,
@@ -122,7 +124,7 @@ def drive(cfg, model_path=None):
     V.add(tub_writer, inputs=inputs, run_condition='recording')
     
     # Run the vehicle for 20 seconds
-    V.start(rate_hz=20, max_loop_count=100000)
+    V.start(rate_hz=cfg.FPS, max_loop_count=100000)
     
     print("You can now go to <your pi ip address>:8887 to drive your car.")
 

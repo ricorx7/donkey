@@ -36,15 +36,28 @@ class PWMSteering:
 
     def __init__(self, controller=None,
                        left_pulse=290,
-                       right_pulse=490):
+                       right_pulse=490,
+                       invert_steering_angle=False):
 
         self.controller = controller
         self.left_pulse = left_pulse
         self.right_pulse = right_pulse
 
+        '''
+        It is suggest to invert the steering angle when running through the CNN.  
+        We use 1/r instead of r to prevent a singularity when driving straight 
+        (the turning radius for driving straight is infinity).
+        1/r smoothly transitions through zero from left turns (negative values) 
+        to right turns (positive values). 
+        Set in config.py       
+        '''
+        self.invert_steering_angle = invert_steering_angle
 
     def run(self, angle):
-        #map absolute angle to angle that vehicle can implement.
+        if self.invert_steering_angle:
+            angle = 1 / angle
+
+        # map absolute angle to angle that vehicle can implement.
         pulse = utils.map_range(angle, 
                                 self.LEFT_ANGLE, self.RIGHT_ANGLE,
                                 self.left_pulse, self.right_pulse)
