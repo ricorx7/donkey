@@ -268,27 +268,25 @@ class JoystickPilot():
                 if self.invert_steering_angle:
                     self.angle = 1 / self.angle
 
-
             if axis == self.throttle_axis:
                 #this value is often reversed, with positive value when pulling down
                 self.throttle = (self.throttle_scale * axis_val * self.max_throttle)
                 print("throttle", self.throttle)
 
-            if button == 'triangle' and button_state == 1:
-                '''
-                switch modes from:
-                user: human controlled steer and throttle
-                local_angle: ai steering, human throttle
-                local: ai steering, ai throttle
-                '''
-                if self.mode == 'user':
-                    self.mode = 'local_angle'
-                elif self.mode == 'local_angle':
-                    self.mode = 'local'
-                else:
-                    self.mode = 'user'
-                print('new mode:', self.mode)
-
+            #if button == 'triangle' and button_state == 1:
+            #   '''
+            #    switch modes from:
+            #    user: human controlled steer and throttle
+            #    local_angle: ai steering, human throttle
+            #    local: ai steering, ai throttle
+            #    '''
+            #    if self.mode == 'user':
+            #        self.mode = 'local_angle'
+            #    elif self.mode == 'local_angle':
+            #        self.mode = 'local'
+            #    else:
+            #        self.mode = 'user'
+            #    print('new mode:', self.mode)
 
             if button == 'trigger' and button_state == 1:
                 '''
@@ -320,7 +318,7 @@ class JoystickPilot():
                 '''
                 increase max throttle setting
                 '''
-                self.max_throttle = round(min(1.0, self.max_throttle + 0.05), 2)
+                self.max_throttle = round(min(1.0, self.max_throttle + 0.01), 2)
                 if self.constant_throttle:
                     self.throttle = self.max_throttle
 
@@ -330,7 +328,7 @@ class JoystickPilot():
                 '''
                 decrease max throttle setting
                 '''
-                self.max_throttle = round(max(0.0, self.max_throttle - 0.05), 2)
+                self.max_throttle = round(max(0.0, self.max_throttle - 0.01), 2)
                 if self.constant_throttle:
                     self.throttle = self.max_throttle
 
@@ -340,28 +338,28 @@ class JoystickPilot():
                 '''
                 increase throttle scale
                 '''
-                self.throttle_scale = round(min(0.0, self.throttle_scale + 0.05), 2)
+                self.throttle_scale = round(min(0.0, self.throttle_scale + 0.01), 2)
                 print('throttle_scale:', self.throttle_scale)
 
             if button == 'top2' and button_state == 1:
                 '''
                 decrease throttle scale
                 '''
-                self.throttle_scale = round(max(-1.0, self.throttle_scale - 0.05), 2)
+                self.throttle_scale = round(max(-1.0, self.throttle_scale - 0.01), 2)
                 print('throttle_scale:', self.throttle_scale)
 
             if button == 'base2' and button_state == 1:
                 '''
                 increase steering scale
                 '''
-                self.steering_scale = round(min(1.0, self.steering_scale + 0.05), 2)
+                self.steering_scale = round(min(1.0, self.steering_scale + 0.01), 2)
                 print('steering_scale:', self.steering_scale)
 
             if button == 'pinkie' and button_state == 1:
                 '''
                 decrease steering scale
                 '''
-                self.steering_scale = round(max(0.0, self.steering_scale - 0.05), 2)
+                self.steering_scale = round(max(0.0, self.steering_scale - 0.01), 2)
                 print('steering_scale:', self.steering_scale)
 
             if button == 'top' and button_state == 1:
