@@ -3,7 +3,7 @@
 Scripts to drive a donkey 2 car and train a model for it. 
 
 Usage:
-    manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>]
+    manage.py drive [--model=<model>] [--web=<True/False>] [--throttle=<Throttle 0.0-1.0>] [--js]
     manage.py train (--tub=<tub>) (--model=<model>)
     manage.py calibrate
     manage.py (calibrate)
@@ -17,7 +17,7 @@ from docopt import docopt
 import donkeycar as dk
 
 
-def drive(cfg, model_path=None):
+def drive(cfg, model_path=None, use_joystick=True):
     """
     Drive the car.
     You will either drive to record data for training or drive to test the autonomous mode.
@@ -25,6 +25,7 @@ def drive(cfg, model_path=None):
     If driving autonomous, give the model to load.
     :param cfg: Configuration for user defined values.
     :param model_path: Path to load the model.
+    :param use_joystick Use parameter in startup to use joystick.
     """
     #Initialized car
     V = dk.vehicle.Vehicle()
@@ -36,7 +37,7 @@ def drive(cfg, model_path=None):
     # Select if only use bluetooth PS3 controller
     # Or web controller
     # Also set the max throttle
-    if cfg.IS_WEB_CONTROL:
+    if cfg.IS_WEB_CONTROL or not use_joystick:
         ctr = dk.parts.LocalWebController()
     else:
         ctr = dk.parts.JoystickPilot(max_throttle=float(cfg.JOYSTICK_MAX_THROTTLE),
@@ -270,7 +271,7 @@ if __name__ == '__main__':
     my_cfg = dk.load_config()
 
     if args['drive']:
-        drive(my_cfg, model_path=args['--model'], use_joystick=args['--js'])
+        drive(my_cfg, model_path=args['--model'])
 
     elif args['calibrate']:
         calibrate()
