@@ -148,7 +148,7 @@ functions to help converte between floating point numbers and categories.
 '''
 
 def linear_bin(a):
-    a = a + 1
+    a = float(a) + 1
     b = round(a / (2/14))
     arr = np.zeros(15)
     arr[int(b)] = 1

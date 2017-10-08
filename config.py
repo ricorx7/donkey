@@ -40,11 +40,17 @@ THROTTLE_STOPPED_PWM = 360
 THROTTLE_REVERSE_PWM = 310
 
 #JOYSTICK
-JOYSTICK_MAX_THROTTLE=0.25
-JOYSTICK_STEERING_SCALE=1
+USE_JOYSTICK_AS_DEFAULT = True
+JOYSTICK_MAX_THROTTLE = 0.25
+JOYSTICK_STEERING_SCALE = 1
+AUTO_RECORD_ON_THROTTLE = True
 
 # Web Control
 IS_WEB_CONTROL = False
+
+#TRAINING
+BATCH_SIZE = 128
+TRAIN_TEST_SPLIT = 0.8
 
 # Model types
 MODEL_TYPE_NVIDIA = "NVIDIA"
@@ -59,6 +65,6 @@ LEARNING_RATE = 1.0e-5                      # Learn rate.  Decrease to fix bias
 EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training
 
 # Nvidia End-To-End Paper
-INVERT_STEERING_ANGLE = True                # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
+INVERT_STEERING_ANGLE = False                # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
 FPS = 10                                    # DEFAULT: 20.  A higher sampling rate would result in including images that are highly similar and thus not provide much useful information.
 
