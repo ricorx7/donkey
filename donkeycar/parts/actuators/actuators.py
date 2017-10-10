@@ -55,7 +55,8 @@ class PWMSteering:
 
     def run(self, angle):
         if self.invert_steering_angle:
-            angle = 1 / angle
+            if angle != 0.0:
+                angle = 1 / angle
 
         # map absolute angle to angle that vehicle can implement.
         pulse = utils.map_range(angle, 

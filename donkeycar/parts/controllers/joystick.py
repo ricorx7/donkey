@@ -266,7 +266,8 @@ class JoystickPilot():
 
                 # Check if inverting the steering angle
                 if self.invert_steering_angle:
-                    self.angle = 1 / self.angle
+                    if self.angle != 0.0:
+                        self.angle = 1 / self.angle
 
             if axis == self.throttle_axis:
                 #this value is often reversed, with positive value when pulling down
