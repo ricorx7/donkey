@@ -40,8 +40,10 @@ def drive(cfg, model_path=None, use_joystick=True):
     if cfg.IS_WEB_CONTROL or not use_joystick:
         ctr = dk.parts.LocalWebController()
     else:
-        ctr = dk.parts.JoystickPilot(max_throttle=float(cfg.JOYSTICK_MAX_THROTTLE),
-                                     invert_steering_angle=cfg.INVERT_STEERING_ANGLE)
+        ctr = dk.parts.JoystickController(max_throttle=cfg.JOYSTICK_MAX_THROTTLE,
+                                          steering_scale=cfg.JOYSTICK_STEERING_SCALE,
+                                          auto_record_on_throttle=cfg.AUTO_RECORD_ON_THROTTLE)
+
     V.add(ctr,
           inputs=['cam/image_array'],
           outputs=['user/angle', 'user/throttle', 'user/mode', 'recording'],
