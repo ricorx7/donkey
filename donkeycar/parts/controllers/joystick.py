@@ -168,7 +168,7 @@ class Joystick():
             tval, value, typev, number = struct.unpack('IhBB', evbuf)
 
             if typev & 0x80:
-                #ignore initialization event
+                # ignore initialization event
                 return button, button_state, axis, axis_val
 
             if typev & 0x01:
@@ -187,7 +187,7 @@ class Joystick():
         return button, button_state, axis, axis_val
 
 
-class JoystickPilot():
+class JoystickController(object):
     '''
     Joystick client using access to local physical input
     '''
@@ -199,8 +199,8 @@ class JoystickPilot():
                  steering_scale=1.0,            # No Scale
                  throttle_scale=-1.0,           # Negative Scale
                  dev_fn='/dev/input/js0',       # Path to the joystick
-                 invert_steering_angle = False  # Flag if steering angle should be inverted
-                 ):
+                 invert_steering_angle = False,  # Flag if steering angle should be inverted
+                 auto_record_on_throttle = True):
 
         self.angle = 0.0
         self.throttle = 0.0
@@ -214,6 +214,7 @@ class JoystickPilot():
         self.throttle_scale = throttle_scale
         self.recording = False
         self.constant_throttle = False
+        self.auto_record_on_throttle = auto_record_on_throttle
 
         '''
         It is suggest to invert the steering angle when running through the CNN.  
@@ -234,6 +235,13 @@ class JoystickPilot():
         self.thread.setDaemon(True)
         self.thread.start()
 
+    def on_throttle_changes(self):
+        '''
+        turn on recording when non zero throttle in the user mode.
+        '''
+        if self.auto_record_on_throttle:
+            self.recording = (self.throttle != 0.0 and self.mode == 'user')
+
 
     def update(self):
         '''
@@ -242,13 +250,13 @@ class JoystickPilot():
         button map name => PS3 button => function
         * top2 = PS3 dpad up => increase throttle scale
         * base = PS3 dpad down => decrease throttle scale
-        * base2 = PS3 dpad left => increase steering scale
+        * base2 = PS3 dpad left => increase steering scale 
         * pinkie = PS3 dpad right => decrease steering scale
         * trigger = PS3 select => switch modes
         * top = PS3 start => toggle constant throttle
-        * base5 = PS3 left trigger 1
+        * base5 = PS3 left trigger 1 
         * base3 = PS3 left trigger 2
-        * base6 = PS3 right trigger 1
+        * base6 = PS3 right trigger 1 
         * base4 = PS3 right trigger 2
         * thumb2 = PS3 right thumb
         * thumb = PS3 left thumb
@@ -270,25 +278,11 @@ class JoystickPilot():
                         self.angle = 1 / self.angle
 
             if axis == self.throttle_axis:
-                #this value is often reversed, with positive value when pulling down
+                # this value is often reversed, with positive value when pulling down
                 self.throttle = (self.throttle_scale * axis_val * self.max_throttle)
                 print("throttle", self.throttle)
-
-            #if button == 'triangle' and button_state == 1:
-            #   '''
-            #    switch modes from:
-            #    user: human controlled steer and throttle
-            #    local_angle: ai steering, human throttle
-            #    local: ai steering, ai throttle
-            #    '''
-            #    if self.mode == 'user':
-            #        self.mode = 'local_angle'
-            #    elif self.mode == 'local_angle':
-            #        self.mode = 'local'
-            #    else:
-            #        self.mode = 'user'
-            #    print('new mode:', self.mode)
-
+                self.on_throttle_changes()
+            
             if button == 'trigger' and button_state == 1:
                 '''
                 switch modes from:
@@ -308,7 +302,9 @@ class JoystickPilot():
                 '''
                 toggle recording on/off
                 '''
-                if self.recording:
+                if self.auto_record_on_throttle:
+                    print('auto record on throttle is enabled.')
+                elif self.recording:
                     self.recording = False
                 else:
                     self.recording = True
@@ -322,6 +318,7 @@ class JoystickPilot():
                 self.max_throttle = round(min(1.0, self.max_throttle + 0.01), 2)
                 if self.constant_throttle:
                     self.throttle = self.max_throttle
+                    self.on_throttle_changes()
 
                 print('max_throttle:', self.max_throttle)
 
@@ -332,6 +329,7 @@ class JoystickPilot():
                 self.max_throttle = round(max(0.0, self.max_throttle - 0.01), 2)
                 if self.constant_throttle:
                     self.throttle = self.max_throttle
+                    self.on_throttle_changes()
 
                 print('max_throttle:', self.max_throttle)
 
@@ -370,9 +368,11 @@ class JoystickPilot():
                 if self.constant_throttle:
                     self.constant_throttle = False
                     self.throttle = 0
+                    self.on_throttle_changes()
                 else:
                     self.constant_throttle = True
                     self.throttle = self.max_throttle
+                    self.on_throttle_changes()
                 print('constant_throttle:', self.constant_throttle)
 
             time.sleep(self.poll_delay)
