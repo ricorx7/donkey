@@ -30,6 +30,7 @@ class KerasPilot():
               steps=10,
               train_split=0.8,
               is_early_stop=True,
+              early_stop_count=5,
               is_tensorboard=False):
         """
         Train the model with the given data and validation data.
@@ -59,7 +60,7 @@ class KerasPilot():
             print("Using Early Stop")
             early_stop = keras.callbacks.EarlyStopping(monitor='loss',
                                                        min_delta=.0005,
-                                                       patience=5,
+                                                       patience=early_stop_count,
                                                        verbose=1,
                                                        mode='auto')
 

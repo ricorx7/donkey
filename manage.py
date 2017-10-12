@@ -176,6 +176,7 @@ def train(cfg, tub_names, model_name):
     epochs = cfg.EPOCHS
     lr = cfg.LEARNING_RATE
     is_stop_early = cfg.IS_EARLY_STOP
+    early_stop_count = cfg.EARLY_STOP_COUNT
 
     X_keys = ['cam/image_array']
     y_keys = ['user/angle', 'user/throttle']
@@ -224,6 +225,7 @@ def train(cfg, tub_names, model_name):
              epochs=epochs,
              saved_model_path=model_path,
              is_early_stop=is_stop_early,
+             early_stop_count=early_stop_count,
              is_tensorboard=tensorboard)
 
 
@@ -235,6 +237,7 @@ def calibrate():
         pmw = int(input('Enter a PWM setting to test(100-600)'))
         c.run(pmw)
 
+
 def check(cfg, tub_names, fix=False):
     '''
     Check for any problems. Looks at tubs and find problems in any records or images that won't open.
@@ -244,6 +247,7 @@ def check(cfg, tub_names, fix=False):
 
     for tub in tubs:
         tub.check(fix=fix)
+
 
 def anaylze(cfg, tub_names, op, record):
     '''

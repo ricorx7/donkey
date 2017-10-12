@@ -48,7 +48,7 @@ AUTO_RECORD_ON_THROTTLE = True
 # Web Control
 IS_WEB_CONTROL = False
 
-#TRAINING
+# TRAINING
 BATCH_SIZE = 128
 TRAIN_TEST_SPLIT = 0.8
 
@@ -60,11 +60,12 @@ MODEL_TYPE_LINEAR = "LINEAR"
 # Keras settings
 TRAINING_MODEL = MODEL_TYPE_CATEGORICAL     # The type of Neural Network model to use for training.
 IS_TENSORBOARD = True                       # Create a Graph directory and record the Tensorboard data to review results
-IS_EARLY_STOP = False                       # If the data does not improve, stop training early
+IS_EARLY_STOP = True                        # If the data does not improve, stop training early
+EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early
 LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias
 EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training
 
 # Nvidia End-To-End Paper
-INVERT_STEERING_ANGLE = False                # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
+INVERT_STEERING_ANGLE = False               # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
 FPS = 20                                    # DEFAULT: 20.  A higher sampling rate would result in including images that are highly similar and thus not provide much useful information.
 
