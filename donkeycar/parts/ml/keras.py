@@ -37,7 +37,7 @@ class KerasPilot():
               is_early_stop=True,
               early_stop_count=5,
               is_tensorboard=False,
-              is_display_plots=False):
+              is_plot_results=False):
         """
         Train the model with the given data and validation data.
         Use checkpoint to record last best model.
@@ -52,8 +52,22 @@ class KerasPilot():
         :param steps: How many steps per epoch.
         :param is_early_stop: Stop early if the training does not improve.
         :param is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
-        :param is_display_plots: Display matplotlib plots.  Same plots as tensorboard
+        :param is_plot_results: Display matplotlib plots.  Same plots as tensorboard
         """
+
+        if is_plot_results or is_tensorboard:
+            folder = 'plots'
+            # Create folder if it does not exist
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
+
+            # Create datetime folder
+            dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+            folder = os.path.join(folder, str(dt))
+
+            # Create folder if it does not exist
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
 
         # checkpoint to save model after each epoch
         save_best = keras.callbacks.ModelCheckpoint(saved_model_path, 
@@ -106,19 +120,18 @@ class KerasPilot():
                         callbacks=callbacks_list, 
                         validation_steps=steps*(1.0 - train_split))
 
-        if is_display_plots:
-            folder = 'plots'
-            dt = datetime.now().strftime("%Y%m%d_%H%M%S")
-            folder = os.path.join(folder, str(dt))
-
-            # Create folder if it does not exist
-            if not os.path.isdir(folder):
-                os.makedirs(folder)
-
+        if is_plot_results:
+            # Save config
             if os.path.exists('config.py'):
-                shutil.copyfile('config.py', os.path.join(folder,'config.py'))
+                shutil.copyfile('config.py', os.path.join(folder, 'config.py'))
 
-            print('Plots at {}'.format(folder))
+            # Copy the model
+            if os.path.exists(saved_model_path):
+                shutil.copyfile(saved_model_path, os.path.join(folder, os.path.basename(saved_model_path)+'.h5py'))
+
+            # Copy the tensorboard
+            if os.path.exists('./Graph'):
+                shutil.copytree('./Graph', os.path.join(folder, 'tensorboard'))
 
             # list all data in history
             print(hist.history.keys())
@@ -172,6 +185,8 @@ class KerasPilot():
             plt.legend(['train', 'test'], loc='upper left')
             plt.savefig(os.path.join(folder, 'throttle_out_acc.png'))
             plt.show()
+
+            print('Result Plots at {}'.format(folder))
 
         return hist
 
@@ -462,3 +477,4 @@ def nvidia_end_to_end(dropout=0.5,
                   metrics=['accuracy'])
 
     return model
+

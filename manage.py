@@ -173,7 +173,7 @@ def train(cfg, tub_names, model_name):
     """
     # Get the configuration
     is_tensorboard = cfg.IS_TENSORBOARD
-    is_plot = cfg.IS_DISPLAY_PLOTS
+    is_plot = cfg.IS_PLOT_RESULTS
     epochs = cfg.EPOCHS
     lr = cfg.LEARNING_RATE
     is_stop_early = cfg.IS_EARLY_STOP
@@ -241,7 +241,7 @@ def train(cfg, tub_names, model_name):
              is_early_stop=is_stop_early,
              early_stop_count=early_stop_count,
              is_tensorboard=is_tensorboard,
-             is_display_plots=is_plot)
+             is_plot_results=is_plot)
 
 
 def calibrate():

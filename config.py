@@ -64,7 +64,7 @@ OPTIMIZER_TYPE_ADAM = "adam"
 # Keras settings
 TRAINING_MODEL = MODEL_TYPE_CATEGORICAL     # The type of Neural Network model to use for training.  DEFAULT: MODEL_TYPE_CATEGORICAL
 IS_TENSORBOARD = True                       # Create a Graph directory and record the Tensorboard data to review results  DEFAULT: False
-IS_DISPLAY_PLOTS = True                     # Create matplotlib plots after training is complete to show results.  DEFAULT: False
+IS_PLOT_RESULTS = True                      # Create matplotlib plots after training is complete to show results.  DEFAULT: False
 IS_EARLY_STOP = True                        # If the data does not improve, stop training early  DEFAULT = True
 EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early  DEFAULT: 5
 LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias  DEFAULT: 1.0e-4
