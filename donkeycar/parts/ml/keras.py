@@ -8,11 +8,13 @@ models to help direct the vehicles motion.
 """
 
 import os
+import shutil
 import numpy as np
 import keras
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from datetime import datetime
 from ... import utils
 
 
@@ -105,9 +107,18 @@ class KerasPilot():
                         validation_steps=steps*(1.0 - train_split))
 
         if is_display_plots:
+            folder = 'plots'
+            dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+            folder = os.path.join(folder, str(dt))
+
             # Create folder if it does not exist
-            if os.path.isdir('plots'):
-                os.makedirs('plots')
+            if not os.path.isdir(folder):
+                os.makedirs(folder)
+
+            if os.path.exists('config.py'):
+                shutil.copyfile('config.py', os.path.join(folder,'config.py'))
+
+            print('Plots at {}'.format(folder))
 
             # list all data in history
             print(hist.history.keys())
@@ -119,7 +130,7 @@ class KerasPilot():
             plt.ylabel('loss')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='upper left')
-            plt.savefig(os.path.join('plots', 'loss.png'))
+            plt.savefig(os.path.join(folder, 'loss.png'))
             #plt.show()
             # summarize history for Angle out loss
             plt.figure('Angle Out Loss')
@@ -129,7 +140,7 @@ class KerasPilot():
             plt.ylabel('accuracy')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='upper left')
-            plt.savefig(os.path.join('plots', 'angle_out_loss.png'))
+            plt.savefig(os.path.join(folder, 'angle_out_loss.png'))
             #plt.show()
             # summarize history for Throttle out loss
             plt.figure('Throttle Out Loss')
@@ -139,7 +150,7 @@ class KerasPilot():
             plt.ylabel('accuracy')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='upper left')
-            plt.savefig(os.path.join('plots', 'throttle_out_loss.png'))
+            plt.savefig(os.path.join(folder, 'throttle_out_loss.png'))
             #plt.show()
             # summarize history for Angle out Accuracy
             plt.figure('Angle Out Accuracy')
@@ -149,7 +160,7 @@ class KerasPilot():
             plt.ylabel('accuracy')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='upper left')
-            plt.savefig(os.path.join('plots', 'angle_out_acc.png'))
+            plt.savefig(os.path.join(folder, 'angle_out_acc.png'))
             #plt.show()
             # summarize history for Throttle out Accuracy
             plt.figure('Throttle Out Accuracy')
@@ -159,7 +170,7 @@ class KerasPilot():
             plt.ylabel('accuracy')
             plt.xlabel('epoch')
             plt.legend(['train', 'test'], loc='upper left')
-            plt.savefig(os.path.join('plots', 'throttle_out_acc.png'))
+            plt.savefig(os.path.join(folder, 'throttle_out_acc.png'))
             plt.show()
 
         return hist
