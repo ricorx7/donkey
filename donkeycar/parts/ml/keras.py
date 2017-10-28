@@ -10,6 +10,9 @@ models to help direct the vehicles motion.
 import os
 import numpy as np
 import keras
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from ... import utils
 
 
@@ -31,17 +34,23 @@ class KerasPilot():
               train_split=0.8,
               is_early_stop=True,
               early_stop_count=5,
-              is_tensorboard=False):
+              is_tensorboard=False,
+              is_display_plots=False):
         """
         Train the model with the given data and validation data.
+        Use checkpoint to record last best model.
+        Select if you want to use early stop.
+        Select if you want to use tensorboard to monitor progress
+        Select if you want to plot the results.  These plots will be the same as tensorboard.
 
-        train_gen: generator that yields an array of images (Random 90% of given data in Tub)
-        val_gen: Generator that yields an array of image  (Random 10% of given data in Tub)
-        saved_model_path: Path to save the model
-        epochs: Number of times to train on the data.
-        steps: How many steps per epoch.
-        is_early_stop: Stop early if the training does not improve.
-        is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
+        :param train_gen: generator that yields an array of images (Random 90% of given data in Tub)
+        :param val_gen: Generator that yields an array of image  (Random 10% of given data in Tub)
+        :param saved_model_path: Path to save the model
+        :param epochs: Number of times to train on the data.
+        :param steps: How many steps per epoch.
+        :param is_early_stop: Stop early if the training does not improve.
+        :param is_tensorboard: Generate a tensorboard to monitor progress of the neural network.
+        :param is_display_plots: Display matplotlib plots.  Same plots as tensorboard
         """
 
         # checkpoint to save model after each epoch
@@ -94,6 +103,61 @@ class KerasPilot():
                         validation_data=val_gen,
                         callbacks=callbacks_list, 
                         validation_steps=steps*(1.0 - train_split))
+
+        if is_display_plots:
+            # list all data in history
+            print(hist.history.keys())
+            # summarize history for loss
+            plt.figure('Loss')
+            plt.plot(hist.history['loss'])
+            plt.plot(hist.history['val_loss'])
+            plt.title('model loss')
+            plt.ylabel('loss')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join('plots', 'loss.png'))
+            #plt.show()
+            # summarize history for Angle out loss
+            plt.figure('Angle Out Loss')
+            plt.plot(hist.history['angle_out_loss'])
+            plt.plot(hist.history['val_angle_out_loss'])
+            plt.title('Angle Out Loss')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join('plots', 'angle_out_loss.png'))
+            #plt.show()
+            # summarize history for Throttle out loss
+            plt.figure('Throttle Out Loss')
+            plt.plot(hist.history['throttle_out_loss'])
+            plt.plot(hist.history['val_throttle_out_loss'])
+            plt.title('Throttle Out Loss')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join('plots', 'throttle_out_loss.png'))
+            #plt.show()
+            # summarize history for Angle out Accuracy
+            plt.figure('Angle Out Accuracy')
+            plt.plot(hist.history['angle_out_acc'])
+            plt.plot(hist.history['val_angle_out_acc'])
+            plt.title('Angle Out Accuracy')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join('plots', 'angle_out_acc.png'))
+            #plt.show()
+            # summarize history for Throttle out Accuracy
+            plt.figure('Throttle Out Accuracy')
+            plt.plot(hist.history['throttle_out_acc'])
+            plt.plot(hist.history['val_throttle_out_acc'])
+            plt.title('Throttle Out Accuracy')
+            plt.ylabel('accuracy')
+            plt.xlabel('epoch')
+            plt.legend(['train', 'test'], loc='upper left')
+            plt.savefig(os.path.join('plots', 'throttle_out_acc.png'))
+            plt.show()
+
         return hist
 
 
@@ -187,12 +251,14 @@ def default_categorical(dropout=0.1, optimizer='rmsprop', learning_rate=1.0e-5):
         model.compile(optimizer=Adam(lr=learning_rate),
                       loss={'angle_out': 'mean_squared_error',
                             'throttle_out': 'mean_squared_error'},
-                      loss_weights={'angle_out': 0.9, 'throttle_out': 0.001})
+                      loss_weights={'angle_out': 0.9, 'throttle_out': 0.001},
+                      metrics=['accuracy'])
     else:
         model.compile(optimizer='rmsprop',
                       loss={'angle_out': 'categorical_crossentropy',
                             'throttle_out': 'mean_absolute_error'},
-                      loss_weights={'angle_out': 0.9, 'throttle_out': .001})
+                      loss_weights={'angle_out': 0.9, 'throttle_out': .001},
+                      metrics=['accuracy'])
 
     return model
 

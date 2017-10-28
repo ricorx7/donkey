@@ -172,7 +172,8 @@ def train(cfg, tub_names, model_name):
     :param model_name: Name of the model to create.
     """
     # Get the configuration
-    tensorboard = cfg.IS_TENSORBOARD
+    is_tensorboard = cfg.IS_TENSORBOARD
+    is_plot = cfg.IS_DISPLAY_PLOTS
     epochs = cfg.EPOCHS
     lr = cfg.LEARNING_RATE
     is_stop_early = cfg.IS_EARLY_STOP
@@ -228,7 +229,8 @@ def train(cfg, tub_names, model_name):
              saved_model_path=model_path,
              is_early_stop=is_stop_early,
              early_stop_count=early_stop_count,
-             is_tensorboard=tensorboard)
+             is_tensorboard=is_tensorboard,
+             is_display_plots=is_plot)
 
 
 def calibrate():
