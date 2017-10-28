@@ -57,15 +57,22 @@ MODEL_TYPE_NVIDIA = "NVIDIA"
 MODEL_TYPE_CATEGORICAL = "CATEGORICAL"
 MODEL_TYPE_LINEAR = "LINEAR"
 
+# Optimizer Types
+OPTIMIZER_TYPE_RMSPROP = "rmsprop"
+OPTIMIZER_TYPE_ADAM = "adam"
+
 # Keras settings
-TRAINING_MODEL = MODEL_TYPE_CATEGORICAL     # The type of Neural Network model to use for training.
-IS_TENSORBOARD = True                       # Create a Graph directory and record the Tensorboard data to review results
-IS_EARLY_STOP = True                        # If the data does not improve, stop training early
-EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early
-LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias
-EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training
+TRAINING_MODEL = MODEL_TYPE_CATEGORICAL     # The type of Neural Network model to use for training.  DEFAULT: MODEL_TYPE_CATEGORICAL
+IS_TENSORBOARD = True                       # Create a Graph directory and record the Tensorboard data to review results  DEFAULT: False
+IS_EARLY_STOP = True                        # If the data does not improve, stop training early  DEFAULT = True
+EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early  DEFAULT: 5
+LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias  DEFAULT: 1.0e-4
+EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training  DEFAULT: 20000
+DROPOUT = 0.1                               # Dropout percentage  DEFAULT: 0.1
+OPTIMIZER = OPTIMIZER_TYPE_RMSPROP          # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
 
 # Nvidia End-To-End Paper
 INVERT_STEERING_ANGLE = False               # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).
+
 FPS = 20                                    # DEFAULT: 20.  A higher sampling rate would result in including images that are highly similar and thus not provide much useful information.
 

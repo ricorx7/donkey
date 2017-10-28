@@ -177,6 +177,8 @@ def train(cfg, tub_names, model_name):
     lr = cfg.LEARNING_RATE
     is_stop_early = cfg.IS_EARLY_STOP
     early_stop_count = cfg.EARLY_STOP_COUNT
+    dropout = cfg.DROPOUT
+    optimizer = cfg.OPTIMIZER
 
     X_keys = ['cam/image_array']
     y_keys = ['user/angle', 'user/throttle']
@@ -197,7 +199,7 @@ def train(cfg, tub_names, model_name):
     else:
         print("CATEGORICAL MODEL")
         # Default model type is Categorical
-        kl = dk.parts.KerasCategorical()
+        kl = dk.parts.KerasCategorical(dropout=dropout, optimizer=optimizer, learning_rate=lr)
 
     tubs = gather_tubs(cfg, tub_names)
 
@@ -238,7 +240,7 @@ def calibrate():
         c.run(pmw)
 
 
-def check(cfg, tub_names, fix=False):
+def check(cfg, tub_names, fix=True):
     '''
     Check for any problems. Looks at tubs and find problems in any records or images that won't open.
     If fix is True, then delete images and records that cause problems.
