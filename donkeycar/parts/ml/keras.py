@@ -105,6 +105,10 @@ class KerasPilot():
                         validation_steps=steps*(1.0 - train_split))
 
         if is_display_plots:
+            # Create folder if it does not exist
+            if os.path.isdir('plots'):
+                os.makedirs('plots')
+
             # list all data in history
             print(hist.history.keys())
             # summarize history for loss
@@ -165,12 +169,25 @@ class KerasCategorical(KerasPilot):
     """
     Use ReLU activation.
     """
-    def __init__(self, model=None, dropout=0.1, optimizer='rmsprop', learning_rate=1e-5,  *args, **kwargs):
+    def __init__(self,
+                 model=None,
+                 dropout_1=0.1,
+                 dropout_2=0.1,
+                 optimizer='rmsprop',
+                 learning_rate=1e-5,
+                 loss_weight_angle=0.9,
+                 loss_weight_throttle=0.001,
+                 *args, **kwargs):
         super(KerasCategorical, self).__init__(*args, **kwargs)
         if model:
             self.model = model
         else:
-            self.model = default_categorical(dropout=dropout, optimizer=optimizer, learning_rate=learning_rate)
+            self.model = default_categorical(dropout_1=dropout_1,
+                                             dropout_2=dropout_2,
+                                             optimizer=optimizer,
+                                             learning_rate=learning_rate,
+                                             loss_weight_angle=loss_weight_angle,
+                                             loss_weight_throttle=loss_weight_throttle)
         
     def run(self, img_arr):
         img_arr = img_arr.reshape((1,) + img_arr.shape)
@@ -202,12 +219,20 @@ class KerasNvidaEndToEnd(KerasPilot):
     """
     Reuse the Nvidia End to End paper for the Neural Network
     """
-    def __init__(self, model=None, learning_rate=1.0e-4, *args, **kwargs):
+    def __init__(self, model=None,
+                 dropout=0.5,
+                 learning_rate=1.0e-4,
+                 loss_weight_angle=0.9,
+                 loss_weight_throttle=0.001,
+                 *args, **kwargs):
         super(KerasNvidaEndToEnd, self).__init__(*args, **kwargs)
         if model:
             self.model = model
         else:
-            self.model = nvidia_end_to_end(learning_rate=learning_rate)
+            self.model = nvidia_end_to_end(dropout=dropout,
+                                           learning_rate=learning_rate,
+                                           loss_weight_angle=loss_weight_angle,
+                                           loss_weight_throttle=loss_weight_throttle)
 
     def run(self, img_arr):
         img_arr = img_arr.reshape((1,) + img_arr.shape)
@@ -217,7 +242,12 @@ class KerasNvidaEndToEnd(KerasPilot):
         return angle_unbinned, throttle[0][0]
 
 
-def default_categorical(dropout=0.1, optimizer='rmsprop', learning_rate=1.0e-5):
+def default_categorical(dropout_1=0.1,
+                        dropout_2=0.1,
+                        optimizer='rmsprop',
+                        learning_rate=1.0e-5,
+                        loss_weight_angle=0.9,
+                        loss_weight_throttle=0.001):
     from keras.layers import Input, Dense, merge
     from keras.models import Model
     from keras.layers import Convolution2D, MaxPooling2D, Reshape, BatchNormalization
@@ -236,9 +266,9 @@ def default_categorical(dropout=0.1, optimizer='rmsprop', learning_rate=1.0e-5):
 
     x = Flatten(name='flattened')(x)                                        # Flatten to 1D (Fully connected)
     x = Dense(100, activation='relu')(x)                                    # Classify the data into 100 features, make all negatives 0
-    x = Dropout(dropout)(x)                                                 # Randomly drop out (turn off) 10% of the neurons (Prevent overfitting)
+    x = Dropout(dropout_1)(x)                                               # Randomly drop out (turn off) 10% of the neurons (Prevent overfitting)
     x = Dense(50, activation='relu')(x)                                     # Classify the data into 50 features, make all negatives 0
-    x = Dropout(dropout)(x)                                                 # Randomly drop out 10% of the neurons (Prevent overfitting)
+    x = Dropout(dropout_2)(x)                                               # Randomly drop out 10% of the neurons (Prevent overfitting)
     # categorical output of the angle
     angle_out = Dense(15, activation='softmax', name='angle_out')(x)        # Connect every input with every output and output 15 hidden units. Use Softmax to give percentage. 15 categories and find best one based off percentage 0.0-1.0
     
@@ -251,24 +281,29 @@ def default_categorical(dropout=0.1, optimizer='rmsprop', learning_rate=1.0e-5):
         model.compile(optimizer=Adam(lr=learning_rate),
                       loss={'angle_out': 'mean_squared_error',
                             'throttle_out': 'mean_squared_error'},
-                      loss_weights={'angle_out': 0.9, 'throttle_out': 0.001},
+                      loss_weights={'angle_out': loss_weight_angle, 'throttle_out': loss_weight_throttle},
                       metrics=['accuracy'])
     else:
         model.compile(optimizer='rmsprop',
                       loss={'angle_out': 'categorical_crossentropy',
                             'throttle_out': 'mean_absolute_error'},
-                      loss_weights={'angle_out': 0.9, 'throttle_out': .001},
+                      loss_weights={'angle_out': loss_weight_angle, 'throttle_out': loss_weight_throttle},
                       metrics=['accuracy'])
 
     return model
 
 
-def default_linear():
+def default_linear(dropout_1=0.1,
+                   dropout_2=0.1,
+                   loss_weight_angle=0.5,
+                   loss_weight_throttle=0.5,
+                   learning_rate=1e-4):
     from keras.layers import Input, Dense, merge
     from keras.models import Model
     from keras.layers import Convolution2D, MaxPooling2D, Reshape, BatchNormalization
     from keras.layers import Activation, Dropout, Flatten, Dense
-    
+    from keras.optimizers import Adam
+
     img_in = Input(shape=(120,160,3), name='img_in')
     x = img_in
     x = Convolution2D(24, (5,5), strides=(2,2), activation='relu')(x)
@@ -279,9 +314,9 @@ def default_linear():
     
     x = Flatten(name='flattened')(x)
     x = Dense(100, activation='linear')(x)
-    x = Dropout(.1)(x)
+    x = Dropout(dropout_1)(x)
     x = Dense(50, activation='linear')(x)
-    x = Dropout(.1)(x)
+    x = Dropout(dropout_2)(x)
     #categorical output of the angle
     angle_out = Dense(1, activation='linear', name='angle_out')(x)
     
@@ -289,12 +324,12 @@ def default_linear():
     throttle_out = Dense(1, activation='linear', name='throttle_out')(x)
     
     model = Model(inputs=[img_in], outputs=[angle_out, throttle_out])
-    
-    
-    model.compile(optimizer='adam',
-                  loss={'angle_out': 'mean_squared_error', 
+
+    model.compile(optimizer=Adam(lr=learning_rate),
+                  loss={'angle_out': 'mean_squared_error',
                         'throttle_out': 'mean_squared_error'},
-                  loss_weights={'angle_out': 0.5, 'throttle_out': .5})
+                  loss_weights={'angle_out': loss_weight_angle, 'throttle_out': loss_weight_throttle},
+                  metrics=['accuracy'])
 
     return model
 
@@ -334,7 +369,10 @@ def default_relu():
     return model
 
 
-def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
+def nvidia_end_to_end(dropout=0.5,
+                      learning_rate=1.0e-5,
+                      loss_weight_angle=0.9,
+                      loss_weight_throttle=0.001):
     """
     Found here:
     https://devblogs.nvidia.com/parallelforall/deep-learning-self-driving-cars/
@@ -393,7 +431,7 @@ def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
     x = Convolution2D(64, (3, 3), strides=(1, 1), activation='elu')(x)
     x = Convolution2D(64, (3, 3), strides=(1, 1), activation='elu')(x)
 
-    x = Dropout(keep_prob)(x)
+    x = Dropout(dropout)(x)
     x = Flatten(name='flattened')(x)
     x = Dense(100, activation='elu')(x)
     x = Dense(50, activation='elu')(x)
@@ -409,6 +447,7 @@ def nvidia_end_to_end(keep_prob=0.5, learning_rate=1.0e-5):
     model.compile(optimizer=Adam(lr=learning_rate),
                   loss={'angle_out': 'mean_squared_error',
                         'throttle_out': 'mean_squared_error'},
-                  loss_weights={'angle_out': 0.9, 'throttle_out': 0.001})
+                  loss_weights={'angle_out': loss_weight_angle, 'throttle_out': loss_weight_throttle},
+                  metrics=['accuracy'])
 
     return model

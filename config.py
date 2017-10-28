@@ -69,8 +69,11 @@ IS_EARLY_STOP = True                        # If the data does not improve, stop
 EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early  DEFAULT: 5
 LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias  DEFAULT: 1.0e-4
 EPOCHS = 20000                              # Number of epochs to run.  The higher the number, the more training  DEFAULT: 20000
-DROPOUT = 0.1                               # Dropout percentage  DEFAULT: 0.1
-OPTIMIZER = OPTIMIZER_TYPE_ADAM          # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
+DROPOUT_1 = 0.1                             # First Dropout percentage  DEFAULT: 0.1
+DROPOUT_2 = 0.1                             # Second Dropout percentage  DEFAULT: 0.1
+OPTIMIZER = OPTIMIZER_TYPE_ADAM             # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
+LOSS_WEIGHT_ANGLE = 0.9                     # Loss weight for Angle  DEFAULT: 0.9
+LOSS_WEIGHT_THROTTLE = 0.001                # Loss weight for Throttle  DEFAULT: 0.001
 
 # Nvidia End-To-End Paper
 INVERT_STEERING_ANGLE = False               # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).

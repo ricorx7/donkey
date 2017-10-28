@@ -178,8 +178,11 @@ def train(cfg, tub_names, model_name):
     lr = cfg.LEARNING_RATE
     is_stop_early = cfg.IS_EARLY_STOP
     early_stop_count = cfg.EARLY_STOP_COUNT
-    dropout = cfg.DROPOUT
+    dropout_1 = cfg.DROPOUT_1
+    dropout_2 = cfg.DROPOUT_2
     optimizer = cfg.OPTIMIZER
+    loss_weight_angle = cfg.LOSS_WEIGHT_ANGLE
+    loss_weight_throttle = cfg.LOSS_WEIGHT_THROTTLE
 
     X_keys = ['cam/image_array']
     y_keys = ['user/angle', 'user/throttle']
@@ -196,11 +199,19 @@ def train(cfg, tub_names, model_name):
     # Check if other model type was selected
     elif cfg.TRAINING_MODEL == cfg.MODEL_TYPE_NVIDIA:
         print("NVIDIA MODEL")
-        kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr)
+        kl = dk.parts.KerasNvidaEndToEnd(learning_rate=lr,
+                                         dropout=dropout_1,
+                                         loss_weight_angle=loss_weight_angle,
+                                         loss_weight_throttle=loss_weight_throttle)
     else:
         print("CATEGORICAL MODEL")
         # Default model type is Categorical
-        kl = dk.parts.KerasCategorical(dropout=dropout, optimizer=optimizer, learning_rate=lr)
+        kl = dk.parts.KerasCategorical(dropout_1=dropout_1,
+                                       dropout_2=dropout_2,
+                                       optimizer=optimizer,
+                                       learning_rate=lr,
+                                       loss_weight_angle=loss_weight_angle,
+                                       loss_weight_throttle=loss_weight_throttle)
 
     tubs = gather_tubs(cfg, tub_names)
 
