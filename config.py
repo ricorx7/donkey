@@ -71,7 +71,7 @@ LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias 
 EPOCHS = 5000                              # Number of epochs to run.  The higher the number, the more training  DEFAULT: 20000
 DROPOUT_1 = 0.1                             # First Dropout percentage  DEFAULT: 0.1
 DROPOUT_2 = 0.1                             # Second Dropout percentage  DEFAULT: 0.1
-OPTIMIZER = OPTIMIZER_TYPE_ADAM             # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
+OPTIMIZER = OPTIMIZER_TYPE_RMSPROP             # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
 LOSS_WEIGHT_ANGLE = 0.9                     # Loss weight for Angle  DEFAULT: 0.9
 LOSS_WEIGHT_THROTTLE = 0.001                # Loss weight for Throttle  DEFAULT: 0.001
 
