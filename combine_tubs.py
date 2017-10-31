@@ -47,14 +47,16 @@ def main(args):
         print(get_num_records(tub))
         index = copy_tub(tub, index, output_folder_path)
 
+    print('Total Number of records: ', index)
+
 
 def copy_tub(path, index, dest):
     tub_records = get_records(path)
 
     # Go there each record, copying the files and modifying the json image path
     for record in tub_records:
-        copy_tub_record(record, index, dest)
-        index += 1
+        if copy_tub_record(record, index, dest):
+            index += 1
 
     return index
 
@@ -63,8 +65,10 @@ def copy_tub_record(file, index, dest):
     # Generate new file name based off index
     new_record_name = 'record_' + str(index).zfill(8) + '.json'
     new_image_name = str(index).zfill(8) + '_cam-image_array_.jpg'
-
     old_folder_path = os.path.dirname(file)
+
+    # copy the meta.json file
+    copy2(os.path.join(old_folder_path, 'meta.json'), os.path.join(dest, 'meta.json'))
 
     # copy the file to the destination
     copy2(file, os.path.join(dest, new_record_name))
@@ -72,8 +76,7 @@ def copy_tub_record(file, index, dest):
     # copy the image file to the destination
     orig_img = get_record_image(file)
     if not orig_img:
-        return
-
+        return False
     copy2(os.path.join(old_folder_path, orig_img), os.path.join(dest, new_image_name))
 
     # modify the json with the new image file name
@@ -89,6 +92,9 @@ def copy_tub_record(file, index, dest):
 
     except json.decoder.JSONDecodeError:
         print("File bad: " + file)
+        return False
+
+    return True
 
 
 def get_record_image(record_path):
