@@ -8,6 +8,8 @@ when i jump between folders.  So this will make all the tubs
 It will rename the json and image files so that everything
 is in order.
 
+--force will delete the output folder if it exists
+
 Usage:
   combine_tubs.py --input=<tubs> --output=<output> [--force]
 
@@ -44,7 +46,7 @@ def main(args):
 
     index = 1
     for tub in get_tubs(folder_paths):
-        print(get_num_records(tub))
+        print(tub + " records: " + str(get_num_records(tub)))
         index = copy_tub(tub, index, output_folder_path)
 
     print('Total Number of records: ', index)
@@ -106,6 +108,7 @@ def get_record_image(record_path):
     except json.decoder.JSONDecodeError:
         print("File bad: " + record_path)
 
+
 def get_tubs(path):
     return glob.glob(os.path.join(path, 'tub_*'))
 
@@ -120,9 +123,6 @@ def get_records(path):
 
 def get_num_records(path):
     return len(get_records(path))
-
-
-
 
 
 if __name__ == "__main__":
