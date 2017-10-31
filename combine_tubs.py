@@ -63,8 +63,8 @@ def copy_tub(path, index, dest):
 
 def copy_tub_record(file, index, dest):
     # Generate new file name based off index
-    new_record_name = 'record_' + str(index).zfill(8) + '.json'
-    new_image_name = str(index).zfill(8) + '_cam-image_array_.jpg'
+    new_record_name = 'record_' + str(index) + '.json'
+    new_image_name = str(index) + '_cam-image_array_.jpg'
     old_folder_path = os.path.dirname(file)
 
     # copy the meta.json file
