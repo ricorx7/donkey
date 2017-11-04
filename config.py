@@ -67,13 +67,15 @@ IS_TENSORBOARD = True                       # Create a Graph directory and recor
 IS_PLOT_RESULTS = True                      # Create matplotlib plots after training is complete to show results.  DEFAULT: False
 IS_EARLY_STOP = False                        # If the data does not improve, stop training early  DEFAULT = True
 EARLY_STOP_COUNT = 5                        # Number of no changes before stopping early  DEFAULT: 5
-LEARNING_RATE = 1.0e-4                      # Learn rate.  Decrease to fix bias  DEFAULT: 1.0e-4
-EPOCHS = 5000                              # Number of epochs to run.  The higher the number, the more training  DEFAULT: 20000
-DROPOUT_1 = 0.1                             # First Dropout percentage  DEFAULT: 0.1
-DROPOUT_2 = 0.1                             # Second Dropout percentage  DEFAULT: 0.1
+LEARNING_RATE = 1.0e-3                      # Learn rate.  Decrease to fix bias  DEFAULT: 1.0e-4
+EPOCHS = 30                                 # Number of epochs to run.  The higher the number, the more training  DEFAULT: 20000
+DROPOUT_1 = 0.5                             # First Dropout percentage  DEFAULT: 0.1
+DROPOUT_2 = 0.5                             # Second Dropout percentage  DEFAULT: 0.1
 OPTIMIZER = OPTIMIZER_TYPE_RMSPROP             # Type of Optimizer to use.  DEFAULT: OPTIMIZER_TYPE_RMSPROP
 LOSS_WEIGHT_ANGLE = 0.9                     # Loss weight for Angle  DEFAULT: 0.9
 LOSS_WEIGHT_THROTTLE = 0.001                # Loss weight for Throttle  DEFAULT: 0.001
+IS_CATEGORICAL = True                       # Flag to use Categorical or Linear for Angle out.  DEFAULT: True
+IS_LR_DECAY = False                          # Flag to decay the learning rate if not change occurs.  DEFAULT: True
 
 # Nvidia End-To-End Paper
 INVERT_STEERING_ANGLE = False               # It is suggest to invert the steering angle when running through the CNN.  1/r smoothly transitions through zero from left turns (negative values) to right turns (positive values).

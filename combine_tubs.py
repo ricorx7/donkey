@@ -11,7 +11,7 @@ is in order.
 --force will delete the output folder if it exists
 
 Usage:
-  combine_tubs.py --input=<tubs> --output=<output> [--force]
+  combine_tubs.py --input=<tubs> --output=<output>
 
 """
 import json as json
@@ -33,13 +33,13 @@ def main(args):
     if not os.path.exists(output_folder_path):
         os.mkdir(output_folder_path)
     else:
-        if args['--force']:
+        #if args['--force']:
             #os.rmdir(output_folder_path)
-            rmtree(output_folder_path)
-            os.mkdir(output_folder_path)
-        else:
-            print("Folder already exist, please give a new folder")
-            exit(-1)
+        rmtree(output_folder_path)
+        os.mkdir(output_folder_path)
+        #else:
+        #    print("Folder already exist, please give a new folder")
+        #    exit(-1)
 
     print(os.listdir(folder_paths))
     print('Number of Tubs: ', get_num_tubs(folder_paths))

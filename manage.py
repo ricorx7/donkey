@@ -183,6 +183,8 @@ def train(cfg, tub_names, model_name):
     optimizer = cfg.OPTIMIZER
     loss_weight_angle = cfg.LOSS_WEIGHT_ANGLE
     loss_weight_throttle = cfg.LOSS_WEIGHT_THROTTLE
+    is_categorical = cfg.IS_CATEGORICAL
+    is_lr_decay = cfg.IS_LR_DECAY
 
     X_keys = ['cam/image_array']
     y_keys = ['user/angle', 'user/throttle']
@@ -211,7 +213,9 @@ def train(cfg, tub_names, model_name):
                                        optimizer=optimizer,
                                        learning_rate=lr,
                                        loss_weight_angle=loss_weight_angle,
-                                       loss_weight_throttle=loss_weight_throttle)
+                                       loss_weight_throttle=loss_weight_throttle,
+                                       is_categorical=is_categorical,
+                                       is_lr_decay=is_lr_decay)
 
     tubs = gather_tubs(cfg, tub_names)
 
