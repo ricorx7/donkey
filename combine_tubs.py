@@ -41,13 +41,21 @@ def main(args):
         #    print("Folder already exist, please give a new folder")
         #    exit(-1)
 
-    print(os.listdir(folder_paths))
-    print('Number of Tubs: ', get_num_tubs(folder_paths))
+    for folder_path in folder_paths.split(','):
+        print(os.listdir(folder_path))
+        print('Number of Tubs: ', get_num_tubs(folder_path))
 
     index = 1
-    for tub in get_tubs(folder_paths):
-        print(tub + " records: " + str(get_num_records(tub)))
-        index = copy_tub(tub, index, output_folder_path)
+
+    for folder_path in folder_paths.split(','):
+        if get_num_records(folder_path) > 0:                            # Single tub folder
+            print(folder_path + " records: " + str(get_num_records(folder_path)))
+            index = copy_tub(folder_path, index, output_folder_path)
+        else:
+            for tub in get_tubs(folder_path):                           # Folder containing multiple tubs
+                print(tub + " records: " + str(get_num_records(tub)))
+                index = copy_tub(tub, index, output_folder_path)
+
 
     print('Total Number of records: ', index)
 
