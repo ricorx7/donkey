@@ -1,0 +1,3 @@
+[submodule "donkeycar/lane_detect"]
+	path = donkeycar/lane_detect
+	url = https://ricorx7@github.com/ricorx7/lane_detect

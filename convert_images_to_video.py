@@ -10,8 +10,13 @@ import os
 from shutil import copy2, rmtree
 from tqdm import tqdm           # Show a progress bar
 import glob
+import cv2
+from donkeycar.lane_detect.image_pipeline import pipeline
 
 def main(args):
+
+    # Draw lane lines in the pictures
+    draw_lane_lines = True
 
     img_folder = args["PATH"]
     if not os.path.exists(args["PATH"]):
@@ -22,7 +27,7 @@ def main(args):
     if not os.path.exists(new_img_folder):
         os.mkdir(os.path.join(img_folder, "video"))
     else:
-        print("New Image Folder already exists.")
+        print("New Image Folder already exists.", new_img_folder)
         exit(-2)
 
     output_folder = new_img_folder
@@ -46,15 +51,20 @@ def main(args):
     # So that it is only images
     img_file_list = glob.glob(os.path.join(img_folder, "*.jpg"))
     for img in tqdm(img_file_list):
-        copy2(img, new_img_folder)
+        if draw_lane_lines:
+            lane_line_img = pipeline(img)                         # Set the line detection pipeline
+            #print(os.path.join(new_img_folder, os.path.basename(img)))
+            cv2.imwrite(os.path.join(new_img_folder, os.path.basename(img)), lane_line_img)
+        else:
+            copy2(img, new_img_folder)
 
     clip = ImageSequenceClip(new_img_folder, fps=20)
-    clip.to_videofile(output_path, fps=20) # many options available
+    clip.write_videofile(output_path, fps=20, codec='libx264') # many options available
 
     # Copy the video to the original folder
     # Remove the folder created
     copy2(output_path, img_folder)
-    rmtree(new_img_folder)
+    #rmtree(new_img_folder)
 
 
 if __name__ == "__main__":
